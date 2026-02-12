@@ -444,10 +444,11 @@
                 </div>
             </div>
             
-            <div class="bg-gray-100 p-4 flex gap-2 no-print">
+            <div class="bg-gray-100 p-4 flex gap-2 no-print" id="receiptButtons">
                 <button onclick="window.closeReceipt()" class="flex-1 py-2 bg-white border border-gray-300 text-gray-700 rounded text-sm font-medium hover:bg-gray-50">Close</button>
-                <button onclick="window.print()" class="flex-1 py-2 bg-black text-white rounded text-sm font-medium hover:bg-gray-800 flex items-center justify-center gap-2">
-                    <i data-lucide="printer" class="w-4 h-4"></i> Print
+                <!-- Dynamic Button (Ask Receipt vs Print) will be inserted here -->
+                <button id="dynamicReceiptBtn" class="flex-1 py-2 bg-black text-white rounded text-sm font-medium hover:bg-gray-800 flex items-center justify-center gap-2">
+                    <!-- Content via JS -->
                 </button>
             </div>
         </div>
@@ -535,11 +536,12 @@
                                 <th class="p-4 font-medium">Payment</th>
                                 <th class="p-4 font-medium text-right">Total</th>
                                 <th class="p-4 font-medium text-right">Time</th>
+                                <th class="p-4 font-medium text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="adminOrdersList" class="divide-y divide-luxury-600 text-sm">
                             <!-- Orders injected via JS -->
-                            <tr><td colspan="6" class="p-8 text-center text-gray-500">Loading orders...</td></tr>
+                            <tr><td colspan="7" class="p-8 text-center text-gray-500">Loading orders...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -624,6 +626,7 @@
         let discountType = 'None';
         let currentUser = null;
         let unsubscribeOrders = null;
+        window.currentAdminOrders = [];
 
         // --- User's Firebase Setup ---
         const appId = 'eataly-pos';
@@ -871,12 +874,6 @@
             `).join('');
 
             // Calculations
-            // Base Subtotal (Inclusive of VAT usually, but for calculation we assume prices are VAT inclusive)
-            // If Discount (Senior/PWD):
-            // 1. Remove VAT: Amount / 1.12
-            // 2. Apply 20% Discount: (Amount / 1.12) * 0.20
-            // 3. Final: (Amount / 1.12) - Discount
-            
             const rawTotal = cart.reduce((acc, c) => acc + (c.item.price * c.quantity), 0);
             let finalTotal = rawTotal;
             let vatAmount = 0;
@@ -895,10 +892,8 @@
                 document.getElementById('cartTax').innerText = '₱0.00 (Exempt)';
             } else {
                 // Standard Logic
-                vatAmount = rawTotal * 0.12; // Just displaying the VAT portion of the total
-                finalTotal = rawTotal + vatAmount; // Wait, usually menu prices are VAT inclusive.
-                // Correction: If prices are exclusive in prev logic: "subtotal + tax". 
-                // Let's stick to the previous logic: Subtotal + 12% VAT = Total.
+                vatAmount = rawTotal * 0.12; 
+                finalTotal = rawTotal + vatAmount; 
                 
                 document.getElementById('vatRow').style.textDecoration = 'none';
                 document.getElementById('vatRow').style.opacity = '1';
@@ -992,8 +987,8 @@
                     showToast(`Order confirmed`);
                     window.closePaymentModal();
                     
-                    // Show Receipt
-                    window.generateReceipt(docRef.id, orderData);
+                    // Show Receipt (Customer View)
+                    window.generateReceipt(docRef.id, orderData, false);
                     window.clearCart();
                 } else {
                     throw new Error("Database not connected.");
@@ -1010,10 +1005,21 @@
         };
 
         // --- Receipt Logic ---
-        window.generateReceipt = function(orderId, data) {
+        window.generateReceipt = function(orderId, data, isAdmin) {
             document.getElementById('receiptDate').innerText = new Date().toLocaleString();
             document.getElementById('receiptId').innerText = `#${orderId.substring(0, 6).toUpperCase()}`;
             
+            // Button Logic
+            const btnContainer = document.getElementById('dynamicReceiptBtn');
+            if (isAdmin) {
+                btnContainer.innerHTML = `<i data-lucide="printer" class="w-4 h-4"></i> Print`;
+                btnContainer.onclick = function() { window.print(); };
+            } else {
+                btnContainer.innerHTML = `<i data-lucide="bell" class="w-4 h-4"></i> Ask for receipt`;
+                btnContainer.onclick = function() { window.requestPhysicalReceipt(); };
+            }
+            lucide.createIcons();
+
             // Table Logic for Take-out
             const tableRow = document.getElementById('receiptTableRow');
             if (data.orderType === 'Take-out') {
@@ -1069,6 +1075,12 @@
             document.getElementById('receiptModal').classList.add('flex');
         }
 
+        window.requestPhysicalReceipt = function() {
+            showToast("Staff notified. Please wait for receipt.");
+            // Optional: Close modal after delay
+            // setTimeout(() => window.closeReceipt(), 2000);
+        }
+
         window.closeReceipt = function() {
             document.getElementById('receiptModal').classList.add('hidden');
             document.getElementById('receiptModal').classList.remove('flex');
@@ -1115,17 +1127,24 @@
             }
         };
 
+        window.viewAdminReceipt = function(orderId) {
+            const order = window.currentAdminOrders.find(o => o.id === orderId);
+            if (order) {
+                window.generateReceipt(orderId, order, true);
+            }
+        }
+
         function startOrdersListener() {
             const listEl = document.getElementById('adminOrdersList');
             
             if (!db || !currentUser) {
-                listEl.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-400">Database not connected or User not authenticated.</td></tr>`;
+                listEl.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-400">Database not connected or User not authenticated.</td></tr>`;
                 return;
             }
 
             const ordersRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
             
-            listEl.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500"><div class="loader w-6 h-6 border-2 border-luxury-600 border-b-gold"></div></td></tr>`;
+            listEl.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-500"><div class="loader w-6 h-6 border-2 border-luxury-600 border-b-gold"></div></td></tr>`;
 
             unsubscribeOrders = onSnapshot(ordersRef, 
                 (snapshot) => {
@@ -1141,6 +1160,9 @@
                         return timeB - timeA;
                     });
                     
+                    // Store for View Receipt Access
+                    window.currentAdminOrders = orders;
+
                     // --- KPI Calculation ---
                     const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
                     const totalOrders = orders.length;
@@ -1151,7 +1173,7 @@
                     document.getElementById('kpiAvg').innerText = formatPrice(avgOrder);
 
                     if (orders.length === 0) {
-                        listEl.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500">No active orders found.</td></tr>`;
+                        listEl.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-500">No active orders found.</td></tr>`;
                         return;
                     }
 
@@ -1171,6 +1193,11 @@
                                 <td class="p-4 text-gray-400 text-xs">${order.paymentMethod}</td>
                                 <td class="p-4 text-right font-medium text-white">${formatPrice(order.total || 0)}</td>
                                 <td class="p-4 text-right text-gray-500 text-sm">${timeString}</td>
+                                <td class="p-4 text-right">
+                                    <button onclick="window.viewAdminReceipt('${order.id}')" class="px-3 py-1 bg-luxury-600 hover:bg-gold hover:text-luxury-900 text-white rounded text-xs transition-colors">
+                                        View
+                                    </button>
+                                </td>
                             </tr>
                         `;
                     }).join('');

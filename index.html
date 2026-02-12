@@ -427,6 +427,11 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
+                // Check protocol
+                if (window.location.protocol === 'file:') {
+                    console.warn("Running from file:// protocol. Firebase Auth may fail.");
+                }
+
                 // Sign in the iPad anonymously to your own database
                 await signInAnonymously(auth);
 
@@ -440,7 +445,26 @@
                 });
             } catch (err) {
                 console.error("Firebase init error:", err);
-                document.getElementById('initLoader').innerHTML = `<p class="text-red-500">System Error. Please verify Firebase setup.</p>`;
+                
+                let msg = err.message;
+                // Friendly error message for common issue
+                if (msg && msg.includes("auth/operation-not-allowed")) {
+                    msg = "Anonymous Sign-in is DISABLED in your Firebase Console.<br><br>Go to Build > Authentication > Sign-in method and enable 'Anonymous'.";
+                }
+                
+                document.getElementById('initLoader').innerHTML = `
+                    <div class="text-center p-8 max-w-lg bg-luxury-800 border border-luxury-600 rounded-xl shadow-2xl">
+                        <i data-lucide="alert-triangle" class="w-12 h-12 text-red-500 mx-auto mb-4"></i>
+                        <h3 class="text-white text-xl font-serif mb-4">Connection Failed</h3>
+                        <div class="bg-black/40 p-4 rounded text-left mb-4 overflow-auto max-h-32">
+                            <p class="text-red-400 text-xs font-mono break-words">${msg}</p>
+                        </div>
+                        <p class="text-gray-500 text-xs mb-6">Check the browser console (F12) for more details.</p>
+                        <button onclick="location.reload()" class="px-6 py-2 bg-luxury-600 hover:bg-gold hover:text-luxury-900 text-white rounded transition-colors font-medium text-sm">
+                            Retry Connection
+                        </button>
+                    </div>`;
+                lucide.createIcons();
             }
         }
 

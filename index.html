@@ -126,7 +126,7 @@
     <div id="initLoader" class="fixed inset-0 bg-luxury-900 z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
         <h1 class="font-serif text-5xl text-gold mb-6 tracking-widest font-bold">EATALY</h1>
         <div class="loader w-12 h-12"></div>
-        <p class="text-gray-400 mt-4 text-sm tracking-wider">CONNECTING TO DATABASE...</p>
+        <p class="text-gray-400 mt-4 text-sm tracking-wider">CONNECTING TO SERVER...</p>
     </div>
 
     <!-- ==================== MAIN POS LAYOUT ==================== -->
@@ -1006,7 +1006,12 @@
 
         // --- Receipt Logic ---
         window.generateReceipt = function(orderId, data, isAdmin) {
-            document.getElementById('receiptDate').innerText = new Date().toLocaleString();
+            // Use timestamp if available (for admin viewing past orders), otherwise current time
+            const dateStr = (isAdmin && data.timestamp) 
+                ? new Date(data.timestamp.toDate()).toLocaleString() 
+                : new Date().toLocaleString();
+                
+            document.getElementById('receiptDate').innerText = dateStr;
             document.getElementById('receiptId').innerText = `#${orderId.substring(0, 6).toUpperCase()}`;
             
             // Button Logic
@@ -1026,26 +1031,28 @@
                 tableRow.style.display = 'none';
             } else {
                 tableRow.style.display = 'flex';
-                document.getElementById('receiptTable').innerText = data.table;
+                document.getElementById('receiptTable').innerText = data.table || "00";
             }
 
-            document.getElementById('receiptType').innerText = data.orderType;
+            document.getElementById('receiptType').innerText = data.orderType || "Dine-in";
             
             // Discount Info
-            if (data.discountType !== 'None') {
+            if (data.discountType && data.discountType !== 'None') {
                 document.getElementById('receiptDiscountTypeRow').classList.remove('hidden');
                 document.getElementById('receiptDiscountIdRow').classList.remove('hidden');
                 document.getElementById('receiptDiscountType').innerText = data.discountType;
-                document.getElementById('receiptDiscountId').innerText = data.discountId;
+                document.getElementById('receiptDiscountId').innerText = data.discountId || "N/A";
             } else {
                 document.getElementById('receiptDiscountTypeRow').classList.add('hidden');
                 document.getElementById('receiptDiscountIdRow').classList.add('hidden');
             }
 
-            // Items
+            // Items - Safely handle if items array is missing (legacy data)
             const tbody = document.getElementById('receiptItems');
             let subtotal = 0;
-            tbody.innerHTML = data.items.map(i => {
+            const safeItems = data.items || [];
+            
+            tbody.innerHTML = safeItems.map(i => {
                 subtotal += i.price * i.qty;
                 return `
                 <tr>
@@ -1057,9 +1064,9 @@
 
             // Totals
             document.getElementById('receiptSubtotal').innerText = formatPrice(subtotal);
-            document.getElementById('receiptTotal').innerText = formatPrice(data.total);
+            document.getElementById('receiptTotal').innerText = formatPrice(data.total || 0);
 
-            if (data.discountType !== 'None') {
+            if (data.discountType && data.discountType !== 'None') {
                  // Exempt
                  document.getElementById('receiptVat').innerText = '0.00 (Exempt)';
                  document.getElementById('receiptDiscRow').classList.remove('hidden');
@@ -1127,10 +1134,20 @@
             }
         };
 
+        // NEW: Safe View Receipt Function
         window.viewAdminReceipt = function(orderId) {
+            console.log("Viewing receipt for:", orderId);
             const order = window.currentAdminOrders.find(o => o.id === orderId);
             if (order) {
-                window.generateReceipt(orderId, order, true);
+                try {
+                    window.generateReceipt(orderId, order, true);
+                } catch (e) {
+                    console.error("Error generating receipt:", e);
+                    showToast("Error: Could not display this legacy receipt.");
+                }
+            } else {
+                console.error("Order not found in local memory");
+                showToast("Order data not found.");
             }
         }
 
@@ -1178,7 +1195,11 @@
                     }
 
                     listEl.innerHTML = orders.map(order => {
-                        const itemsSummary = order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
+                        const safeItems = order.items || [];
+                        const itemsSummary = safeItems.length > 0 
+                            ? safeItems.map(i => `${i.qty}x ${i.name}`).join(', ')
+                            : 'No items details';
+                            
                         const timeString = order.timestamp 
                             ? new Date(order.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
                             : 'Just now';
@@ -1188,9 +1209,9 @@
                         return `
                             <tr class="hover:bg-luxury-700/50 transition-colors">
                                 <td class="p-4 font-mono text-gold text-xs">#${shortId}</td>
-                                <td class="p-4 font-bold text-white">T-${order.table} <span class="text-gray-500 text-xs font-normal">(${order.orderType})</span></td>
+                                <td class="p-4 font-bold text-white">T-${order.table || "?"} <span class="text-gray-500 text-xs font-normal">(${order.orderType || "Dine-in"})</span></td>
                                 <td class="p-4 text-gray-300 max-w-xs truncate" title="${itemsSummary}">${itemsSummary}</td>
-                                <td class="p-4 text-gray-400 text-xs">${order.paymentMethod}</td>
+                                <td class="p-4 text-gray-400 text-xs">${order.paymentMethod || "Card"}</td>
                                 <td class="p-4 text-right font-medium text-white">${formatPrice(order.total || 0)}</td>
                                 <td class="p-4 text-right text-gray-500 text-sm">${timeString}</td>
                                 <td class="p-4 text-right">

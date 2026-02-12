@@ -85,21 +85,33 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Print Styles */
+        /* Print Styles - Fixed for blank page issue */
         @media print {
-            body * {
-                visibility: hidden;
+            body > * {
+                display: none !important;
+            }
+            #receiptModal {
+                display: flex !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                background: white !important;
+                z-index: 9999 !important;
+                align-items: flex-start !important;
+                justify-content: center !important;
+                padding: 0 !important;
+            }
+            #receiptModal > div {
+                box-shadow: none !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                background: white !important;
             }
             #receiptArea, #receiptArea * {
-                visibility: visible;
-            }
-            #receiptArea {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                background: white;
-                color: black;
+                visibility: visible !important;
+                color: black !important;
             }
             .no-print {
                 display: none !important;
@@ -107,7 +119,8 @@
         }
     </style>
 </head>
-<body class="font-sans antialiased selection:bg-gold selection:text-luxury-900 h-screen w-screen flex">
+<!-- Changed layout to flex-col on mobile, row on desktop -->
+<body class="font-sans antialiased selection:bg-gold selection:text-luxury-900 h-screen w-screen flex flex-col md:flex-row relative">
 
     <!-- Loading Overlay -->
     <div id="initLoader" class="fixed inset-0 bg-luxury-900 z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
@@ -118,8 +131,8 @@
 
     <!-- ==================== MAIN POS LAYOUT ==================== -->
     
-    <!-- Left Sidebar Navigation -->
-    <aside class="w-24 bg-luxury-900 border-r border-luxury-600 flex flex-col items-center py-6 z-20 shadow-2xl shrink-0">
+    <!-- Left Sidebar Navigation (Desktop Only) -->
+    <aside class="hidden md:flex w-24 bg-luxury-900 border-r border-luxury-600 flex-col items-center py-6 z-20 shadow-2xl shrink-0">
         <div class="w-12 h-12 bg-luxury-800 rounded-full flex items-center justify-center border border-gold mb-10 shadow-[0_0_15px_rgba(212,175,55,0.2)]">
             <span class="font-serif text-gold font-bold text-xl">E</span>
         </div>
@@ -143,24 +156,24 @@
     </aside>
 
     <!-- Center Content (Menu Grid) -->
-    <main class="flex-1 bg-luxury-800 flex flex-col min-w-0 h-full">
+    <main class="flex-1 bg-luxury-800 flex flex-col min-w-0 h-full overflow-hidden">
         <!-- Top Header -->
-        <header class="h-20 border-b border-luxury-600 flex items-center justify-between px-8 bg-luxury-900/50 shrink-0">
+        <header class="h-16 md:h-20 border-b border-luxury-600 flex items-center justify-between px-4 md:px-8 bg-luxury-900/50 shrink-0">
             <div>
-                <h1 class="font-serif text-2xl text-white tracking-wide">Eataly POS</h1>
-                <p class="text-xs text-gray-400 mt-1">Venice Grand Canal Mall, Taguig</p>
+                <h1 class="font-serif text-xl md:text-2xl text-white tracking-wide">Eataly POS</h1>
+                <p class="text-[10px] md:text-xs text-gray-400 mt-1 hidden md:block">Venice Grand Canal Mall, Taguig</p>
             </div>
             
-            <div class="flex items-center gap-6">
+            <div class="flex items-center gap-3 md:gap-6">
                 <div class="relative">
-                    <input type="text" id="searchInput" placeholder="Search menu..." 
-                        class="bg-luxury-700 text-white border border-luxury-600 rounded-lg py-2.5 px-4 pl-10 focus:outline-none focus:border-gold transition-colors w-72 text-sm shadow-inner">
-                    <i data-lucide="search" class="absolute left-3 top-3 w-4 h-4 text-gray-400"></i>
+                    <input type="text" id="searchInput" placeholder="Search..." 
+                        class="bg-luxury-700 text-white border border-luxury-600 rounded-lg py-2 px-3 md:px-4 md:pl-10 pl-8 focus:outline-none focus:border-gold transition-colors w-32 md:w-72 text-xs md:text-sm shadow-inner">
+                    <i data-lucide="search" class="absolute left-2.5 top-2.5 w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400"></i>
                 </div>
                 
-                <div class="flex items-center gap-3 bg-luxury-700 border border-luxury-600 rounded-lg px-4 py-2">
-                    <i data-lucide="map-pin" class="w-4 h-4 text-gold"></i>
-                    <select id="tableSelector" class="bg-transparent text-white text-sm focus:outline-none cursor-pointer appearance-none outline-none font-medium">
+                <div id="tableSelectorContainer" class="flex items-center gap-2 bg-luxury-700 border border-luxury-600 rounded-lg px-2 md:px-4 py-2">
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5 md:w-4 md:h-4 text-gold"></i>
+                    <select id="tableSelector" class="bg-transparent text-white text-xs md:text-sm focus:outline-none cursor-pointer appearance-none outline-none font-medium">
                         <option value="1">Table 01</option>
                         <option value="2">Table 02</option>
                         <option value="3">Table 03</option>
@@ -177,15 +190,15 @@
         </header>
 
         <!-- Category Tabs -->
-        <div class="px-8 py-6 shrink-0">
+        <div class="px-4 md:px-8 py-4 md:py-6 shrink-0">
             <div class="flex overflow-x-auto gap-3 custom-scrollbar pb-2" id="categoryTabs">
                 <!-- Injected via JS -->
             </div>
         </div>
 
         <!-- Scrollable Grid -->
-        <div class="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar">
-            <div id="menuGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div class="flex-1 overflow-y-auto px-4 md:px-8 pb-24 md:pb-8 custom-scrollbar">
+            <div id="menuGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 <!-- Menu items injected via JS -->
             </div>
             
@@ -197,8 +210,13 @@
         </div>
     </main>
 
-    <!-- Right Sidebar (Cart / Checkout) -->
-    <aside class="w-96 bg-luxury-900 border-l border-luxury-600 flex flex-col shrink-0 h-full shadow-2xl relative z-10">
+    <!-- Right Sidebar (Cart / Checkout) - Responsive: Hidden on mobile until toggled -->
+    <aside id="cartSidebar" class="fixed md:relative inset-0 md:inset-auto bg-luxury-900 md:w-96 border-l border-luxury-600 flex flex-col shrink-0 h-full shadow-2xl z-40 transform translate-x-full md:translate-x-0 transition-transform duration-300">
+        <!-- Close button for mobile -->
+        <button onclick="window.toggleMobileCart()" class="md:hidden absolute top-4 right-4 text-gray-400 hover:text-white p-2">
+            <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+
         <!-- Order Header & Type -->
         <div class="p-6 border-b border-luxury-600 shrink-0">
             <div class="flex justify-between items-center mb-4">
@@ -224,7 +242,7 @@
         </div>
 
         <!-- Totals & Checkout -->
-        <div class="p-6 bg-luxury-800 border-t border-luxury-600 shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
+        <div class="p-6 bg-luxury-800 border-t border-luxury-600 shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] mb-16 md:mb-0">
             <!-- Discount Selector -->
             <div class="mb-4">
                 <label class="text-xs text-gray-500 uppercase tracking-wider mb-2 block">Discount Options</label>
@@ -263,6 +281,23 @@
             </div>
         </div>
     </aside>
+
+    <!-- Mobile Bottom Navigation -->
+    <div class="md:hidden fixed bottom-0 left-0 w-full bg-luxury-900 border-t border-luxury-600 flex justify-around py-3 z-50">
+        <button onclick="window.switchView('menu')" class="flex flex-col items-center text-gold">
+            <i data-lucide="utensils-crossed" class="w-6 h-6"></i>
+            <span class="text-[10px] mt-1">Menu</span>
+        </button>
+        <button onclick="window.toggleMobileCart()" class="flex flex-col items-center text-gray-400 hover:text-white relative">
+            <i data-lucide="shopping-bag" class="w-6 h-6"></i>
+            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center" id="mobileCartCount">0</span>
+            <span class="text-[10px] mt-1">Cart</span>
+        </button>
+        <button onclick="window.openAdminLogin()" class="flex flex-col items-center text-gray-400 hover:text-white">
+            <i data-lucide="bar-chart-3" class="w-6 h-6"></i>
+            <span class="text-[10px] mt-1">Admin</span>
+        </button>
+    </div>
 
     <!-- ==================== OVERLAYS & MODALS ==================== -->
 
@@ -347,13 +382,13 @@
             <div id="receiptArea" class="p-8 pb-4">
                 <div class="text-center border-b-2 border-dashed border-gray-300 pb-4 mb-4">
                     <h1 class="font-serif text-2xl font-bold mb-1">EATALY</h1>
-                    <p class="text-xs text-gray-500 uppercase tracking-widest">Fine Dining POS</p>
+                    <p class="text-xs text-gray-500 uppercase tracking-widest">Venice Grand Canal Mall, Taguig</p>
                     <p class="text-xs text-gray-500 mt-2" id="receiptDate">Date</p>
                     <p class="text-xs text-gray-500">Order ID: <span id="receiptId">#0000</span></p>
                 </div>
                 
                 <div class="text-sm mb-4">
-                    <div class="flex justify-between">
+                    <div class="flex justify-between" id="receiptTableRow">
                         <span class="font-bold">Table:</span>
                         <span id="receiptTable">00</span>
                     </div>
@@ -404,7 +439,7 @@
                 </div>
 
                 <div class="text-center mt-6 text-xs text-gray-500">
-                    <p>Thank you for dining with us!</p>
+                    <p>Mabuhay! Thank you for dining with us!</p>
                     <p>This serves as your official receipt.</p>
                 </div>
             </div>
@@ -724,6 +759,36 @@
             orderType = type;
             document.getElementById('btnDineIn').className = type === 'Dine-in' ? 'text-xs font-medium py-2 rounded transition-all bg-gold text-luxury-900' : 'text-xs font-medium py-2 rounded transition-all text-gray-400 hover:text-white';
             document.getElementById('btnTakeOut').className = type === 'Take-out' ? 'text-xs font-medium py-2 rounded transition-all bg-gold text-luxury-900' : 'text-xs font-medium py-2 rounded transition-all text-gray-400 hover:text-white';
+            
+            // Toggle table selector visibility
+            const tableSelector = document.getElementById('tableSelectorContainer');
+            if (type === 'Take-out') {
+                tableSelector.classList.add('opacity-0', 'pointer-events-none');
+                document.getElementById('orderTableBadge').innerText = 'Take-out';
+            } else {
+                tableSelector.classList.remove('opacity-0', 'pointer-events-none');
+                const val = document.getElementById('tableSelector').value;
+                document.getElementById('orderTableBadge').innerText = `T-${val.padStart(2, '0')}`;
+            }
+        }
+
+        // Mobile Cart Toggle
+        window.toggleMobileCart = function() {
+            const sidebar = document.getElementById('cartSidebar');
+            if (sidebar.classList.contains('translate-x-full')) {
+                sidebar.classList.remove('translate-x-full');
+            } else {
+                sidebar.classList.add('translate-x-full');
+            }
+        }
+
+        // Switch View for Mobile Nav
+        window.switchView = function(view) {
+            if (view === 'menu') {
+                // Close cart if open
+                const sidebar = document.getElementById('cartSidebar');
+                sidebar.classList.add('translate-x-full');
+            }
         }
 
         window.addToCart = function(itemId) {
@@ -753,6 +818,14 @@
             const checkoutBtn = document.getElementById('checkoutBtn');
             const clearBtn = document.getElementById('clearBtn');
             
+            // Update Mobile Badge
+            const totalItems = cart.reduce((acc, c) => acc + c.quantity, 0);
+            const mobileBadge = document.getElementById('mobileCartCount');
+            if (mobileBadge) {
+                mobileBadge.innerText = totalItems;
+                mobileBadge.style.display = totalItems > 0 ? 'flex' : 'none';
+            }
+
             // Get discount selection
             const discountSelect = document.getElementById('discountSelector');
             discountType = discountSelect.value;
@@ -916,7 +989,7 @@
                     const ordersRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
                     const docRef = await addDoc(ordersRef, orderData);
                     
-                    showToast(`Order confirmed for Table ${tableNo}`);
+                    showToast(`Order confirmed`);
                     window.closePaymentModal();
                     
                     // Show Receipt
@@ -940,7 +1013,16 @@
         window.generateReceipt = function(orderId, data) {
             document.getElementById('receiptDate').innerText = new Date().toLocaleString();
             document.getElementById('receiptId').innerText = `#${orderId.substring(0, 6).toUpperCase()}`;
-            document.getElementById('receiptTable').innerText = data.table;
+            
+            // Table Logic for Take-out
+            const tableRow = document.getElementById('receiptTableRow');
+            if (data.orderType === 'Take-out') {
+                tableRow.style.display = 'none';
+            } else {
+                tableRow.style.display = 'flex';
+                document.getElementById('receiptTable').innerText = data.table;
+            }
+
             document.getElementById('receiptType').innerText = data.orderType;
             
             // Discount Info

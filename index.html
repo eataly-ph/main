@@ -92,7 +92,7 @@
     <div id="initLoader" class="fixed inset-0 bg-luxury-900 z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
         <h1 class="font-serif text-5xl text-gold mb-6 tracking-widest font-bold">EATALY</h1>
         <div class="loader w-12 h-12"></div>
-        <p class="text-gray-400 mt-4 text-sm tracking-wider">INITIALIZING SYSTEM...</p>
+        <p class="text-gray-400 mt-4 text-sm tracking-wider">CONNECTING TO DATABASE...</p>
     </div>
 
     <!-- ==================== MAIN POS LAYOUT ==================== -->
@@ -353,10 +353,11 @@
         <span id="toastMsg">Action successful</span>
     </div>
 
-    <!-- JavaScript Logic -->
+    <!-- JavaScript Logic with User's Firebase Config -->
     <script type="module">
+        // Import Firebase CDN links (because we are in a plain HTML file, we use the URL imports)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Data: Premium specific imagery for fine dining Italian ---
@@ -387,11 +388,16 @@
         let currentUser = null;
         let unsubscribeOrders = null;
 
-        // --- Firebase Setup ---
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'eataly-pos-default';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : null;
+        // --- User's Firebase Setup ---
+        const appId = 'eataly-pos';
+        const firebaseConfig = {
+            apiKey: "AIzaSyCcYHJ4oUcnacXJ8uZ6ZXVly_v9ZWGt81Y",
+            authDomain: "eataly-pos.firebaseapp.com",
+            projectId: "eataly-pos",
+            storageBucket: "eataly-pos.firebasestorage.app",
+            messagingSenderId: "741458161964",
+            appId: "1:741458161964:web:5cbb2ae13c347ade7cbc89"
+        };
 
         let db, auth;
 
@@ -416,38 +422,25 @@
             });
 
             // Firebase Init
-            if (firebaseConfig) {
-                try {
-                    const app = initializeApp(firebaseConfig);
-                    auth = getAuth(app);
-                    db = getFirestore(app);
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
 
-                    // Authenticaton is MANDATORY before any Firestore queries
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
+                // Sign in the iPad anonymously to your own database
+                await signInAnonymously(auth);
 
-                    onAuthStateChanged(auth, (user) => {
-                        currentUser = user;
-                        // Hide loader once auth state is resolved
-                        setTimeout(() => {
-                            document.getElementById('initLoader').style.opacity = '0';
-                            setTimeout(() => document.getElementById('initLoader').style.display = 'none', 500);
-                        }, 500);
-                    });
-                } catch (err) {
-                    console.error("Firebase init error:", err);
-                    document.getElementById('initLoader').innerHTML = `<p class="text-red-500">System Error. Please reload.</p>`;
-                }
-            } else {
-                // Fallback for environment without Firebase (mock mode)
-                console.warn("No Firebase config found. Running in local mock mode.");
-                setTimeout(() => {
-                    document.getElementById('initLoader').style.opacity = '0';
-                    setTimeout(() => document.getElementById('initLoader').style.display = 'none', 500);
-                }, 500);
+                onAuthStateChanged(auth, (user) => {
+                    currentUser = user;
+                    // Hide loader once auth state is resolved
+                    setTimeout(() => {
+                        document.getElementById('initLoader').style.opacity = '0';
+                        setTimeout(() => document.getElementById('initLoader').style.display = 'none', 500);
+                    }, 500);
+                });
+            } catch (err) {
+                console.error("Firebase init error:", err);
+                document.getElementById('initLoader').innerHTML = `<p class="text-red-500">System Error. Please verify Firebase setup.</p>`;
             }
         }
 
@@ -577,9 +570,9 @@
                 </div>
             `).join('');
 
-            // Totals Calculation (12% VAT instead of 10% Service Charge)
+            // Totals Calculation (12% VAT)
             const subtotal = cart.reduce((acc, c) => acc + (c.item.price * c.quantity), 0);
-            const tax = subtotal * 0.12; // 12% VAT
+            const tax = subtotal * 0.12;
             const total = subtotal + tax;
 
             document.getElementById('cartSubtotal').innerText = formatPrice(subtotal);
@@ -624,21 +617,18 @@
             };
 
             try {
-                // RULE 1: STRICT PATHS
                 if (db && currentUser) {
                     const ordersRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
                     await addDoc(ordersRef, orderData);
+                    showToast(`Order confirmed for Table ${tableNo}`);
+                    window.closePaymentModal();
+                    window.clearCart();
                 } else {
-                    console.warn("Mocking Firestore write (no db/user). Data:", orderData);
-                    await new Promise(r => setTimeout(r, 800)); // Fake network delay
+                    throw new Error("Database not connected properly.");
                 }
-
-                showToast(`Order confirmed for Table ${tableNo}`);
-                window.closePaymentModal();
-                window.clearCart();
             } catch (error) {
                 console.error("Order processing failed:", error);
-                alert("Failed to process order. Please check connection.");
+                alert("Failed to process order. Please check your database connection.");
             } finally {
                 btn.innerHTML = originalContent;
                 btn.disabled = false;
@@ -689,13 +679,11 @@
         function startOrdersListener() {
             const listEl = document.getElementById('adminOrdersList');
             
-            // Requires Auth guard
             if (!db || !currentUser) {
                 listEl.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-400">Database not connected or User not authenticated.</td></tr>`;
                 return;
             }
 
-            // RULE 2: No Complex Queries. Just fetch collection and sort in JS
             const ordersRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
             
             listEl.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500"><div class="loader w-6 h-6 border-2 border-luxury-600 border-b-gold"></div></td></tr>`;
@@ -707,7 +695,7 @@
                         orders.push({ id: doc.id, ...doc.data() });
                     });
 
-                    // Sort descending by time in memory
+                    // Sort descending by time
                     orders.sort((a, b) => {
                         const timeA = a.timestamp ? a.timestamp.toMillis() : 0;
                         const timeB = b.timestamp ? b.timestamp.toMillis() : 0;
@@ -725,7 +713,6 @@
                             ? new Date(order.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
                             : 'Just now';
                         
-                        // Fake order ID from doc ID
                         const shortId = order.id.substring(0, 6).toUpperCase();
 
                         return `
@@ -746,18 +733,16 @@
                 },
                 (error) => {
                     console.error("Firestore Listen Error:", error);
-                    listEl.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500">Failed to load orders.</td></tr>`;
+                    listEl.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500">Failed to load orders. Make sure you set your Database Rules to Test Mode!</td></tr>`;
                 }
             );
         }
 
-        // --- Utils ---
         function showToast(msg) {
             const toast = document.getElementById('toast');
             document.getElementById('toastMsg').innerText = msg;
             
             toast.classList.remove('translate-x-[150%]');
-            
             setTimeout(() => {
                 toast.classList.add('translate-x-[150%]');
             }, 3000);

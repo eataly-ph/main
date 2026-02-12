@@ -84,6 +84,27 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #receiptArea, #receiptArea * {
+                visibility: visible;
+            }
+            #receiptArea {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                color: black;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body class="font-sans antialiased selection:bg-gold selection:text-luxury-900 h-screen w-screen flex">
@@ -109,7 +130,7 @@
                 <span class="text-xs font-medium">Menu</span>
             </button>
             <button onclick="window.openAdminLogin()" class="nav-btn w-full flex flex-col items-center gap-2 text-gray-500 hover:text-white transition-colors border-r-2 border-transparent py-2 group">
-                <i data-lucide="lock" class="w-6 h-6"></i>
+                <i data-lucide="bar-chart-3" class="w-6 h-6"></i>
                 <span class="text-xs font-medium">Admin</span>
             </button>
         </nav>
@@ -126,8 +147,8 @@
         <!-- Top Header -->
         <header class="h-20 border-b border-luxury-600 flex items-center justify-between px-8 bg-luxury-900/50 shrink-0">
             <div>
-                <h1 class="font-serif text-2xl text-white tracking-wide">Table Ordering</h1>
-                <p class="text-xs text-gray-400 mt-1">Select your dishes below</p>
+                <h1 class="font-serif text-2xl text-white tracking-wide">Eataly POS</h1>
+                <p class="text-xs text-gray-400 mt-1">Venice Grand Canal Mall, Taguig</p>
             </div>
             
             <div class="flex items-center gap-6">
@@ -178,11 +199,19 @@
 
     <!-- Right Sidebar (Cart / Checkout) -->
     <aside class="w-96 bg-luxury-900 border-l border-luxury-600 flex flex-col shrink-0 h-full shadow-2xl relative z-10">
-        <div class="p-6 border-b border-luxury-600 flex justify-between items-center shrink-0">
-            <h2 class="font-serif text-xl text-white flex items-center gap-2">
-                <i data-lucide="receipt" class="w-5 h-5 text-gold"></i> Current Order
-            </h2>
-            <span class="bg-luxury-700 text-gold text-xs font-bold px-3 py-1 rounded-full border border-luxury-600" id="orderTableBadge">T-04</span>
+        <!-- Order Header & Type -->
+        <div class="p-6 border-b border-luxury-600 shrink-0">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-serif text-xl text-white flex items-center gap-2">
+                    <i data-lucide="receipt" class="w-5 h-5 text-gold"></i> Current Order
+                </h2>
+                <span class="bg-luxury-700 text-gold text-xs font-bold px-3 py-1 rounded-full border border-luxury-600" id="orderTableBadge">T-04</span>
+            </div>
+            <!-- Order Type Toggle -->
+            <div class="grid grid-cols-2 bg-luxury-800 p-1 rounded-lg border border-luxury-600">
+                <button onclick="window.setOrderType('Dine-in')" id="btnDineIn" class="text-xs font-medium py-2 rounded transition-all bg-gold text-luxury-900">Dine-in</button>
+                <button onclick="window.setOrderType('Take-out')" id="btnTakeOut" class="text-xs font-medium py-2 rounded transition-all text-gray-400 hover:text-white">Take-out</button>
+            </div>
         </div>
         
         <!-- Cart Items List -->
@@ -196,17 +225,31 @@
 
         <!-- Totals & Checkout -->
         <div class="p-6 bg-luxury-800 border-t border-luxury-600 shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
-            <div class="space-y-3 mb-6">
+            <!-- Discount Selector -->
+            <div class="mb-4">
+                <label class="text-xs text-gray-500 uppercase tracking-wider mb-2 block">Discount Options</label>
+                <select id="discountSelector" onchange="window.updateCartUI()" class="w-full bg-luxury-900 border border-luxury-600 text-white text-sm rounded px-3 py-2 focus:outline-none focus:border-gold">
+                    <option value="None">None</option>
+                    <option value="PWD">PWD (VAT Exempt + 20%)</option>
+                    <option value="Senior">Senior Citizen (VAT Exempt + 20%)</option>
+                </select>
+            </div>
+
+            <div class="space-y-2 mb-6">
                 <div class="flex justify-between text-gray-400 text-sm">
                     <span>Subtotal</span>
                     <span id="cartSubtotal" class="text-white">₱0.00</span>
                 </div>
-                <div class="flex justify-between text-gray-400 text-sm">
+                <div class="flex justify-between text-gray-400 text-sm" id="vatRow">
                     <span>VAT (12%)</span>
                     <span id="cartTax" class="text-white">₱0.00</span>
                 </div>
-                <div class="flex justify-between text-white font-serif text-xl border-t border-luxury-600 pt-3">
-                    <span>Payable Amount</span>
+                <div class="flex justify-between text-gold text-sm hidden" id="discountRow">
+                    <span>Discount (20%)</span>
+                    <span id="cartDiscount">-₱0.00</span>
+                </div>
+                <div class="flex justify-between text-white font-serif text-xl border-t border-luxury-600 pt-3 mt-2">
+                    <span>Total</span>
                     <span id="cartTotal" class="text-gold font-bold">₱0.00</span>
                 </div>
             </div>
@@ -215,7 +258,7 @@
                     <i data-lucide="trash-2" class="w-5 h-5"></i>
                 </button>
                 <button onclick="window.openPaymentModal()" id="checkoutBtn" class="flex-1 bg-gold hover:bg-gold-light text-luxury-900 py-3 rounded font-bold tracking-wide transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                    <i data-lucide="credit-card" class="w-5 h-5"></i> Proceed to Pay
+                    <i data-lucide="credit-card" class="w-5 h-5"></i> Checkout
                 </button>
             </div>
         </div>
@@ -227,7 +270,7 @@
     <div id="paymentModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[70] hidden items-center justify-center p-4">
         <div class="bg-luxury-900 border border-luxury-600 w-full max-w-md rounded-xl shadow-2xl relative overflow-hidden">
             <div class="p-6 border-b border-luxury-600 bg-luxury-800 flex justify-between items-center">
-                <h2 class="font-serif text-xl text-gold">Secure Payment</h2>
+                <h2 class="font-serif text-xl text-gold">Payment & Confirmation</h2>
                 <button onclick="window.closePaymentModal()" class="text-gray-400 hover:text-white transition-colors">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
@@ -235,38 +278,143 @@
             
             <form id="paymentForm" onsubmit="window.processOrder(event)" class="p-6">
                 <div class="flex justify-between items-center mb-6 bg-luxury-800 p-4 rounded-lg border border-luxury-600">
-                    <span class="text-gray-400 text-sm">Amount to Pay</span>
+                    <span class="text-gray-400 text-sm">Total Amount</span>
                     <span class="text-2xl font-serif font-bold text-white" id="paymentTotalAmount">₱0.00</span>
                 </div>
 
-                <div class="space-y-4">
+                <!-- Discount ID Input (Conditional) -->
+                <div id="discountIdField" class="hidden mb-6">
+                    <label class="block text-xs font-medium text-gold mb-1 uppercase tracking-wider">Senior/PWD ID Number</label>
+                    <input type="text" id="discountIdInput" class="w-full bg-luxury-800 border border-gold text-white px-4 py-3 rounded focus:outline-none placeholder-gray-600" placeholder="ID Number (Required)">
+                </div>
+
+                <!-- Payment Method Tabs -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="paymentMethod" value="Card" class="peer sr-only" checked onchange="window.togglePaymentFields()">
+                        <div class="p-4 rounded border border-luxury-600 bg-luxury-800 peer-checked:border-gold peer-checked:bg-luxury-700 hover:bg-luxury-700 transition-all text-center">
+                            <i data-lucide="credit-card" class="w-6 h-6 text-white mx-auto mb-2"></i>
+                            <span class="text-sm font-medium text-white">Card Payment</span>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="paymentMethod" value="Counter" class="peer sr-only" onchange="window.togglePaymentFields()">
+                        <div class="p-4 rounded border border-luxury-600 bg-luxury-800 peer-checked:border-gold peer-checked:bg-luxury-700 hover:bg-luxury-700 transition-all text-center">
+                            <i data-lucide="store" class="w-6 h-6 text-white mx-auto mb-2"></i>
+                            <span class="text-sm font-medium text-white">Pay at Counter</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div id="cardFields" class="space-y-4">
                     <div>
                         <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-wider">Cardholder Name</label>
-                        <input type="text" required class="w-full bg-luxury-800 border border-luxury-600 text-white px-4 py-3 rounded focus:outline-none focus:border-gold transition-colors placeholder-gray-600" placeholder="John Doe">
+                        <input type="text" id="cardName" class="w-full bg-luxury-800 border border-luxury-600 text-white px-4 py-3 rounded focus:outline-none focus:border-gold transition-colors placeholder-gray-600" placeholder="John Doe">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-wider">Card Number</label>
                         <div class="relative">
-                            <input type="text" required pattern="\d{16}" maxlength="16" class="w-full bg-luxury-800 border border-luxury-600 text-white px-4 py-3 pl-10 rounded focus:outline-none focus:border-gold transition-colors placeholder-gray-600 font-mono" placeholder="0000 0000 0000 0000">
+                            <input type="text" id="cardNumber" pattern="\d{16}" maxlength="16" class="w-full bg-luxury-800 border border-luxury-600 text-white px-4 py-3 pl-10 rounded focus:outline-none focus:border-gold transition-colors placeholder-gray-600 font-mono" placeholder="0000 0000 0000 0000">
                             <i data-lucide="credit-card" class="absolute left-3 top-3.5 w-4 h-4 text-gray-500"></i>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-wider">Expiry Date</label>
-                            <input type="text" required pattern="(0[1-9]|1[0-2])\/\d{2}" maxlength="5" class="w-full bg-luxury-800 border border-luxury-600 text-white px-4 py-3 rounded focus:outline-none focus:border-gold transition-colors placeholder-gray-600 font-mono text-center" placeholder="MM/YY">
+                            <input type="text" id="cardExpiry" pattern="(0[1-9]|1[0-2])\/\d{2}" maxlength="5" class="w-full bg-luxury-800 border border-luxury-600 text-white px-4 py-3 rounded focus:outline-none focus:border-gold transition-colors placeholder-gray-600 font-mono text-center" placeholder="MM/YY">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-wider">CVV</label>
-                            <input type="password" required pattern="\d{3,4}" maxlength="4" class="w-full bg-luxury-800 border border-luxury-600 text-white px-4 py-3 rounded focus:outline-none focus:border-gold transition-colors placeholder-gray-600 font-mono text-center" placeholder="•••">
+                            <input type="password" id="cardCvv" pattern="\d{3,4}" maxlength="4" class="w-full bg-luxury-800 border border-luxury-600 text-white px-4 py-3 rounded focus:outline-none focus:border-gold transition-colors placeholder-gray-600 font-mono text-center" placeholder="•••">
                         </div>
                     </div>
                 </div>
 
+                <div id="counterMsg" class="hidden text-center py-4 text-gray-400 text-sm bg-luxury-800 rounded border border-luxury-600">
+                    Please proceed to the cashier to complete your payment.
+                </div>
+
                 <button type="submit" id="confirmPaymentBtn" class="w-full bg-gold hover:bg-gold-light text-luxury-900 py-3 rounded font-bold tracking-wide transition-colors mt-8 flex justify-center items-center gap-2">
-                    <i data-lucide="lock" class="w-4 h-4"></i> Pay Securely
+                    <i data-lucide="check" class="w-4 h-4"></i> Confirm Order
                 </button>
             </form>
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div id="receiptModal" class="fixed inset-0 bg-black/90 z-[80] hidden items-center justify-center p-4">
+        <div class="bg-white text-black w-full max-w-sm shadow-2xl overflow-hidden relative">
+            <div id="receiptArea" class="p-8 pb-4">
+                <div class="text-center border-b-2 border-dashed border-gray-300 pb-4 mb-4">
+                    <h1 class="font-serif text-2xl font-bold mb-1">EATALY</h1>
+                    <p class="text-xs text-gray-500 uppercase tracking-widest">Fine Dining POS</p>
+                    <p class="text-xs text-gray-500 mt-2" id="receiptDate">Date</p>
+                    <p class="text-xs text-gray-500">Order ID: <span id="receiptId">#0000</span></p>
+                </div>
+                
+                <div class="text-sm mb-4">
+                    <div class="flex justify-between">
+                        <span class="font-bold">Table:</span>
+                        <span id="receiptTable">00</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-bold">Type:</span>
+                        <span id="receiptType">Dine-in</span>
+                    </div>
+                    <div class="flex justify-between hidden" id="receiptDiscountTypeRow">
+                        <span class="font-bold">Discount:</span>
+                        <span id="receiptDiscountType"></span>
+                    </div>
+                    <div class="flex justify-between hidden" id="receiptDiscountIdRow">
+                        <span class="font-bold">ID #:</span>
+                        <span id="receiptDiscountId"></span>
+                    </div>
+                </div>
+
+                <table class="w-full text-xs mb-4">
+                    <thead>
+                        <tr class="border-b border-gray-300 text-left">
+                            <th class="py-1">Qty</th>
+                            <th class="py-1">Item</th>
+                            <th class="py-1 text-right">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody id="receiptItems">
+                        <!-- Items -->
+                    </tbody>
+                </table>
+
+                <div class="border-t-2 border-dashed border-gray-300 pt-2 space-y-1 text-xs">
+                    <div class="flex justify-between">
+                        <span>Subtotal</span>
+                        <span id="receiptSubtotal">0.00</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>VAT (12%)</span>
+                        <span id="receiptVat">0.00</span>
+                    </div>
+                    <div class="flex justify-between hidden" id="receiptDiscRow">
+                        <span>Less: Discount</span>
+                        <span id="receiptDiscAmt">0.00</span>
+                    </div>
+                    <div class="flex justify-between font-bold text-lg mt-2 pt-2 border-t border-gray-300">
+                        <span>TOTAL</span>
+                        <span id="receiptTotal">0.00</span>
+                    </div>
+                </div>
+
+                <div class="text-center mt-6 text-xs text-gray-500">
+                    <p>Thank you for dining with us!</p>
+                    <p>This serves as your official receipt.</p>
+                </div>
+            </div>
+            
+            <div class="bg-gray-100 p-4 flex gap-2 no-print">
+                <button onclick="window.closeReceipt()" class="flex-1 py-2 bg-white border border-gray-300 text-gray-700 rounded text-sm font-medium hover:bg-gray-50">Close</button>
+                <button onclick="window.print()" class="flex-1 py-2 bg-black text-white rounded text-sm font-medium hover:bg-gray-800 flex items-center justify-center gap-2">
+                    <i data-lucide="printer" class="w-4 h-4"></i> Print
+                </button>
+            </div>
         </div>
     </div>
 
@@ -321,8 +469,25 @@
 
         <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
             <div class="max-w-7xl mx-auto">
+                
+                <!-- KPIs -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-luxury-800 border border-luxury-600 p-6 rounded-xl shadow-lg">
+                        <div class="text-gray-400 text-xs font-medium uppercase tracking-wider mb-2">Total Revenue</div>
+                        <div class="text-gold font-serif text-3xl" id="kpiRevenue">₱0.00</div>
+                    </div>
+                    <div class="bg-luxury-800 border border-luxury-600 p-6 rounded-xl shadow-lg">
+                        <div class="text-gray-400 text-xs font-medium uppercase tracking-wider mb-2">Total Orders</div>
+                        <div class="text-white font-serif text-3xl" id="kpiOrders">0</div>
+                    </div>
+                    <div class="bg-luxury-800 border border-luxury-600 p-6 rounded-xl shadow-lg">
+                        <div class="text-gray-400 text-xs font-medium uppercase tracking-wider mb-2">Avg. Order Value</div>
+                        <div class="text-white font-serif text-3xl" id="kpiAvg">₱0.00</div>
+                    </div>
+                </div>
+
                 <h2 class="text-lg font-medium text-white mb-6 flex items-center gap-2">
-                    <i data-lucide="list-ordered" class="w-5 h-5 text-gold"></i> Live Orders
+                    <i data-lucide="list-ordered" class="w-5 h-5 text-gold"></i> Sales History
                 </h2>
 
                 <div class="bg-luxury-800 border border-luxury-600 rounded-xl overflow-hidden shadow-2xl">
@@ -330,10 +495,10 @@
                         <thead>
                             <tr class="bg-luxury-700 border-b border-luxury-600 text-xs uppercase tracking-wider text-gray-400">
                                 <th class="p-4 font-medium">Order ID</th>
-                                <th class="p-4 font-medium">Table</th>
+                                <th class="p-4 font-medium">Table / Type</th>
                                 <th class="p-4 font-medium">Items Summary</th>
-                                <th class="p-4 font-medium text-right">Total (Inc. VAT)</th>
-                                <th class="p-4 font-medium">Status</th>
+                                <th class="p-4 font-medium">Payment</th>
+                                <th class="p-4 font-medium text-right">Total</th>
                                 <th class="p-4 font-medium text-right">Time</th>
                             </tr>
                         </thead>
@@ -355,28 +520,63 @@
 
     <!-- JavaScript Logic with User's Firebase Config -->
     <script type="module">
-        // Import Firebase CDN links (because we are in a plain HTML file, we use the URL imports)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Data: Premium specific imagery for fine dining Italian ---
+        // --- FULL MENU DATA ---
         const menuData = [
-            { id: 's1', name: 'Tomato Consommé', price: 349, category: 'Soups', desc: 'Clarified tomato broth served chilled with heirloom pearls.', img: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=400&q=80' },
-            { id: 's2', name: 'Zuppa di Pesce', price: 395, category: 'Soups', desc: 'Saffron-infused seafood broth with poached clams and fennel.', img: 'https://images.unsplash.com/photo-1574782090885-1b1511202863?auto=format&fit=crop&w=400&q=80' },
-            { id: 's3', name: 'Lobster Bisque', price: 450, category: 'Soups', desc: 'Rich shellfish reduction finished with brandy and lobster bits.', img: 'https://images.unsplash.com/photo-1625944227303-c60f4e3ed280?auto=format&fit=crop&w=400&q=80' },
-            { id: 'p1', name: 'Lobster Ravioli', price: 820, category: 'Pasta', desc: 'Stuffed pillows in nutty beurre noisette with crispy sage.', img: 'https://images.unsplash.com/photo-1588013273468-315fd88ea34c?auto=format&fit=crop&w=400&q=80' },
-            { id: 'p2', name: 'Squid Ink Linguine', price: 790, category: 'Pasta', desc: 'Dramatic black pasta tossed with pan-seared Hokkaido scallops.', img: 'https://images.unsplash.com/photo-1552611052-d336a5a065ff?auto=format&fit=crop&w=400&q=80' },
-            { id: 'p3', name: 'Wagyu Spaghetti', price: 680, category: 'Pasta', desc: 'Square-cut pasta with Wagyu meatballs in San Marzano sauce.', img: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=400&q=80' },
-            { id: 'm1', name: 'Osso Buco Milanese', price: 975, category: 'Mains', desc: 'Braised veal shanks served with gremolata and saffron risotto.', img: 'https://images.unsplash.com/photo-1544928147-79a2dbc1f389?auto=format&fit=crop&w=400&q=80' },
-            { id: 'm2', name: 'Pan-Seared Branzino', price: 1150, category: 'Mains', desc: 'Mediterranean Sea Bass with lemon-caper butter sauce.', img: 'https://images.unsplash.com/photo-1580476262798-bddd9f4b7369?auto=format&fit=crop&w=400&q=80' },
-            { id: 'm3', name: 'Bistecca Fiorentina', price: 1850, category: 'Mains', desc: 'Premium T-bone steak grilled over high heat with rosemary.', img: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80' },
-            { id: 'sd1', name: 'Truffle Polenta Fries', price: 110, category: 'Sides', desc: 'Crispy cornmeal batons served with truffle aioli.', img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=400&q=80' },
-            { id: 'sd2', name: 'Caprese Salad', price: 79, category: 'Sides', desc: 'Fresh mozzarella and tomatoes with balsamic glaze.', img: 'https://images.unsplash.com/photo-1529312266912-b33cfce2eefd?auto=format&fit=crop&w=400&q=80' },
+            // Soup
+            { id: 's1', name: 'Tomato Consommé', price: 349, category: 'Soups', desc: 'Clarified, intense tomato broth served chilled or warm, garnished with micro-basil.', img: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=400&q=80' },
+            { id: 's2', name: 'Corn Chowder', price: 270, category: 'Soups', desc: 'Velvety sweet corn reduction finished with a swirl of chili oil and toasted pancetta.', img: 'https://images.unsplash.com/photo-1603046891744-1f76eb10efa1?auto=format&fit=crop&w=400&q=80' },
+            { id: 's3', name: 'Minestrone di Verdure', price: 285, category: 'Soups', desc: 'Refined take on the classic; clear vegetable broth featuring precision-cut greens.', img: 'https://images.unsplash.com/photo-1548943487-a2e4f43b485f?auto=format&fit=crop&w=400&q=80' },
+            { id: 's4', name: 'Zuppa di Pesce', price: 395, category: 'Soups', desc: 'Delicate seafood broth infused with premium saffron, poached clams and fennel.', img: 'https://images.unsplash.com/photo-1574782090885-1b1511202863?auto=format&fit=crop&w=400&q=80' },
+            { id: 's5', name: 'Creamy Wild Mushroom', price: 320, category: 'Soups', desc: 'Earthy blend of Porcini and Portobello mushrooms, finished with fresh thyme.', img: 'https://images.unsplash.com/photo-1543339494-b4cd4f7ba686?auto=format&fit=crop&w=400&q=80' },
+            { id: 's6', name: 'Lobster Bisque', price: 450, category: 'Soups', desc: 'Rich shellfish reduction finished with brandy and butter-poached lobster bits.', img: 'https://images.unsplash.com/photo-1625944227303-c60f4e3ed280?auto=format&fit=crop&w=400&q=80' },
+            
+            // Pasta
+            { id: 'p1', name: 'Lobster Ravioli', price: 820, category: 'Pasta', desc: 'Hand-stuffed pillows of lobster meat tossed in a nutty beurre noisette.', img: 'https://images.unsplash.com/photo-1588013273468-315fd88ea34c?auto=format&fit=crop&w=400&q=80' },
+            { id: 'p2', name: 'Pappardelle al Cinghiale', price: 740, category: 'Pasta', desc: 'Wide ribbon pasta served with a 12-hour slow-cooked wild boar ragu.', img: 'https://images.unsplash.com/photo-1621996316585-84462153df1d?auto=format&fit=crop&w=400&q=80' },
+            { id: 'p3', name: 'Squid Ink Linguine', price: 790, category: 'Pasta', desc: 'Dramatic black pasta tossed in light garlic-white wine sauce with scallops.', img: 'https://images.unsplash.com/photo-1552611052-d336a5a065ff?auto=format&fit=crop&w=400&q=80' },
+            { id: 'p4', name: 'Spaghetti alla Chitarra', price: 680, category: 'Pasta', desc: 'Square-cut spaghetti paired with tender Wagyu beef meatballs.', img: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=400&q=80' },
+            { id: 'p5', name: 'Agnoletti del Plin', price: 650, category: 'Pasta', desc: 'Traditional pinched pasta filled with roasted veal and pork in meat jus.', img: 'https://images.unsplash.com/photo-1608897013039-887f214b985c?auto=format&fit=crop&w=400&q=80' },
+            { id: 'p6', name: 'Gnocchi Gorgonzola', price: 610, category: 'Pasta', desc: 'Soft potato pillows in a creamy blue cheese sauce, topped with toasted walnuts.', img: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=400&q=80' },
+
+            // Mains
+            { id: 'm1', name: 'Truffle Fettuccine', price: 750, category: 'Mains', desc: 'Luxurious fettuccine bathed in a velvet Parmigiano-Reggiano cream and truffle oil.', img: 'https://images.unsplash.com/photo-1645112411341-6c4fd023714a?auto=format&fit=crop&w=400&q=80' },
+            { id: 'm2', name: 'Osso Buco Milanese', price: 975, category: 'Mains', desc: 'Braised veal shanks served with gremolata and saffron risotto.', img: 'https://images.unsplash.com/photo-1544928147-79a2dbc1f389?auto=format&fit=crop&w=400&q=80' },
+            { id: 'm3', name: 'Seafood Risotto', price: 850, category: 'Mains', desc: 'Slow-stirred Arborio rice with prawns, mussels, and squid.', img: 'https://images.unsplash.com/photo-1616295552943-b183dd941bf5?auto=format&fit=crop&w=400&q=80' },
+            { id: 'm4', name: 'Margherita Pizza', price: 895, category: 'Mains', desc: 'Neapolitan-style thin crust topped with buffalo mozzarella and basil.', img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=400&q=80' },
+            { id: 'm5', name: 'Lasagna al Forno', price: 625, category: 'Mains', desc: 'Layers of fresh egg pasta, rich bolognese, and creamy béchamel.', img: 'https://images.unsplash.com/photo-1614961908612-921bc699b80b?auto=format&fit=crop&w=400&q=80' },
+            { id: 'm6', name: 'Pan-Seared Branzino', price: 1150, category: 'Mains', desc: 'Mediterranean Sea Bass with lemon-caper butter sauce.', img: 'https://images.unsplash.com/photo-1580476262798-bddd9f4b7369?auto=format&fit=crop&w=400&q=80' },
+            { id: 'm7', name: 'Bistecca Fiorentina', price: 1850, category: 'Mains', desc: 'Premium T-bone steak grilled over high heat with rosemary.', img: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80' },
+            { id: 'm8', name: 'Herb Lamb Chops', price: 1400, category: 'Mains', desc: 'Tender lamb racks coated in parsley-garlic crust, balsamic reduction.', img: 'https://images.unsplash.com/photo-1600891964092-4316c288032e?auto=format&fit=crop&w=400&q=80' },
+            { id: 'm9', name: 'Chicken Saltimbocca', price: 720, category: 'Mains', desc: 'Chicken wrapped in prosciutto and sage, white wine butter glaze.', img: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=400&q=80' },
+
+            // Sides
+            { id: 'sd1', name: 'Garlic Parmesan Bread', price: 59, category: 'Sides', desc: 'Toasted ciabatta rubbed with fresh garlic and dusted with aged Parmesan.', img: 'https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?auto=format&fit=crop&w=400&q=80' },
+            { id: 'sd2', name: 'Caprese Salad', price: 79, category: 'Sides', desc: 'Slices of fresh mozzarella and tomatoes drizzled with balsamic glaze.', img: 'https://images.unsplash.com/photo-1529312266912-b33cfce2eefd?auto=format&fit=crop&w=400&q=80' },
+            { id: 'sd3', name: 'Roasted Vegetables', price: 89, category: 'Sides', desc: 'A colorful medley of zucchini, peppers, and eggplant roasted with oregano.', img: 'https://images.unsplash.com/photo-1580210086968-38cb88f50435?auto=format&fit=crop&w=400&q=80' },
+            { id: 'sd4', name: 'Truffle Polenta Fries', price: 110, category: 'Sides', desc: 'Crispy cornmeal batons served with a side of truffle aioli.', img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=400&q=80' },
+            { id: 'sd5', name: 'Sautéed Broccolini', price: 95, category: 'Sides', desc: 'Tender stems tossed with garlic, olive oil, and a pinch of red chili flakes.', img: 'https://images.unsplash.com/photo-1551893665-f843f600794e?auto=format&fit=crop&w=400&q=80' },
+            { id: 'sd6', name: 'Creamy Mashed Potato', price: 85, category: 'Sides', desc: 'Whipped Yukon Gold potatoes finished with high-quality Italian olive oil.', img: 'https://images.unsplash.com/photo-1633504581559-0f62243d81b4?auto=format&fit=crop&w=400&q=80' },
+            { id: 'sd7', name: 'Arugula Salad', price: 105, category: 'Sides', desc: 'Peppery wild arugula tossed in a light lemon vinaigrette with parmesan.', img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=400&q=80' },
+            { id: 'sd8', name: 'Risotto Milanese', price: 150, category: 'Sides', desc: 'A side portion of our signature saffron-infused creamy rice.', img: 'https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?auto=format&fit=crop&w=400&q=80' },
+
+            // Desserts
             { id: 'd1', name: 'Classic Tiramisu', price: 200, category: 'Desserts', desc: 'Espresso-soaked ladyfingers layered with mascarpone cream.', img: 'https://images.unsplash.com/photo-1571115177098-24c42de1bd0f?auto=format&fit=crop&w=400&q=80' },
-            { id: 'd2', name: 'Warm Chocolate Fondant', price: 240, category: 'Desserts', desc: 'Molten center dark chocolate cake with hazelnut praline.', img: 'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?auto=format&fit=crop&w=400&q=80' },
-            { id: 'b1', name: 'Mango Bellini', price: 220, category: 'Drinks', desc: 'Tropical fusion; chilled sparkling prosecco with fresh mango.', img: 'https://images.unsplash.com/photo-1556881286-fc6915169721?auto=format&fit=crop&w=400&q=80' },
-            { id: 'b2', name: 'Espresso Romano', price: 129, category: 'Drinks', desc: 'Bold premium espresso shot served with a twist of lemon.', img: 'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&w=400&q=80' }
+            { id: 'd2', name: 'Panna Cotta', price: 159, category: 'Desserts', desc: 'Silky-smooth cooked cream dessert topped with forest berry coulis.', img: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=400&q=80' },
+            { id: 'd3', name: 'Affogato al Caffè', price: 149, category: 'Desserts', desc: 'Vanilla bean gelato drowned in a hot shot of ristretto espresso.', img: 'https://images.unsplash.com/photo-1582234372722-50d7ccc30ebd?auto=format&fit=crop&w=400&q=80' },
+            { id: 'd4', name: 'Artisan Gelato', price: 199, category: 'Desserts', desc: 'Three scoops: Pistachio, Chocolate, or Stracciatella.', img: 'https://images.unsplash.com/photo-1563805042-7684c8a9e9cb?auto=format&fit=crop&w=400&q=80' },
+            { id: 'd5', name: 'Sicilian Cannoli', price: 180, category: 'Desserts', desc: 'Crispy pastry shells filled with sweet ricotta and pistachios.', img: 'https://images.unsplash.com/photo-1621236378699-8597faa6a48a?auto=format&fit=crop&w=400&q=80' },
+            { id: 'd6', name: 'Warm Choco Fondant', price: 240, category: 'Desserts', desc: 'Molten center dark chocolate cake with hazelnut praline.', img: 'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?auto=format&fit=crop&w=400&q=80' },
+            { id: 'd7', name: 'Lemon Sorbet', price: 140, category: 'Desserts', desc: 'Refreshing citrus sorbet garnished with fresh mint.', img: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?auto=format&fit=crop&w=400&q=80' },
+
+            // Drinks
+            { id: 'b1', name: 'Italian Spark. Water', price: 99, category: 'Drinks', desc: 'Crisp, chilled San Pellegrino served with lemon.', img: 'https://images.unsplash.com/photo-1600870535304-97cce30b35ed?auto=format&fit=crop&w=400&q=80' },
+            { id: 'b2', name: 'Limonata', price: 99, category: 'Drinks', desc: 'Zesty house-made soda using Sicilian lemons and cane sugar.', img: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=400&q=80' },
+            { id: 'b3', name: 'Espresso Romano', price: 129, category: 'Drinks', desc: 'Bold premium espresso shot served with a twist of lemon.', img: 'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&w=400&q=80' },
+            { id: 'b4', name: 'Mango Bellini', price: 220, category: 'Drinks', desc: 'Tropical fusion; chilled sparkling prosecco with fresh mango.', img: 'https://images.unsplash.com/photo-1556881286-fc6915169721?auto=format&fit=crop&w=400&q=80' }
         ];
 
         const categories = ['All', 'Soups', 'Pasta', 'Mains', 'Sides', 'Desserts', 'Drinks'];
@@ -385,6 +585,8 @@
         let cart = [];
         let currentCategory = 'All';
         let searchQuery = '';
+        let orderType = 'Dine-in';
+        let discountType = 'None';
         let currentUser = null;
         let unsubscribeOrders = null;
 
@@ -427,17 +629,14 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // Check protocol
                 if (window.location.protocol === 'file:') {
                     console.warn("Running from file:// protocol. Firebase Auth may fail.");
                 }
 
-                // Sign in the iPad anonymously to your own database
                 await signInAnonymously(auth);
 
                 onAuthStateChanged(auth, (user) => {
                     currentUser = user;
-                    // Hide loader once auth state is resolved
                     setTimeout(() => {
                         document.getElementById('initLoader').style.opacity = '0';
                         setTimeout(() => document.getElementById('initLoader').style.display = 'none', 500);
@@ -445,28 +644,18 @@
                 });
             } catch (err) {
                 console.error("Firebase init error:", err);
-                
                 let msg = err.message;
-                // Friendly error message for common issue
                 if (msg && msg.includes("auth/operation-not-allowed")) {
                     msg = "Anonymous Sign-in is DISABLED.<br>Go to Firebase Console > Build > Authentication > Sign-in method and enable 'Anonymous'.";
                 } else if (msg && msg.includes("auth/configuration-not-found")) {
                     msg = "<strong>Authentication Not Enabled!</strong><br><br>1. Go to Firebase Console.<br>2. Click 'Build' > 'Authentication'.<br>3. Click <strong>'Get Started'</strong>.<br>4. Enable Anonymous Sign-in.";
                 }
-                
                 document.getElementById('initLoader').innerHTML = `
                     <div class="text-center p-8 max-w-lg bg-luxury-800 border border-luxury-600 rounded-xl shadow-2xl">
-                        <i data-lucide="alert-triangle" class="w-12 h-12 text-red-500 mx-auto mb-4"></i>
                         <h3 class="text-white text-xl font-serif mb-4">Connection Failed</h3>
-                        <div class="bg-black/40 p-4 rounded text-left mb-4 overflow-auto max-h-40 border border-red-900/30">
-                            <p class="text-red-400 text-xs font-mono break-words leading-relaxed">${msg}</p>
-                        </div>
-                        <p class="text-gray-500 text-xs mb-6">Check the browser console (F12) for more details.</p>
-                        <button onclick="location.reload()" class="px-6 py-2 bg-luxury-600 hover:bg-gold hover:text-luxury-900 text-white rounded transition-colors font-medium text-sm">
-                            Retry Connection
-                        </button>
+                        <p class="text-red-400 text-xs font-mono break-words leading-relaxed">${msg}</p>
+                        <button onclick="location.reload()" class="px-6 py-2 bg-luxury-600 hover:bg-gold hover:text-luxury-900 text-white rounded transition-colors font-medium text-sm mt-4">Retry</button>
                     </div>`;
-                lucide.createIcons();
             }
         }
 
@@ -531,13 +720,17 @@
         }
 
         // --- Cart Logic ---
+        window.setOrderType = function(type) {
+            orderType = type;
+            document.getElementById('btnDineIn').className = type === 'Dine-in' ? 'text-xs font-medium py-2 rounded transition-all bg-gold text-luxury-900' : 'text-xs font-medium py-2 rounded transition-all text-gray-400 hover:text-white';
+            document.getElementById('btnTakeOut').className = type === 'Take-out' ? 'text-xs font-medium py-2 rounded transition-all bg-gold text-luxury-900' : 'text-xs font-medium py-2 rounded transition-all text-gray-400 hover:text-white';
+        }
+
         window.addToCart = function(itemId) {
             const item = menuData.find(i => i.id === itemId);
             const existing = cart.find(c => c.item.id === itemId);
-            
             if (existing) existing.quantity += 1;
             else cart.push({ item, quantity: 1 });
-            
             updateCartUI();
         };
 
@@ -555,11 +748,15 @@
             updateCartUI();
         };
 
-        function updateCartUI() {
+        window.updateCartUI = function() {
             const container = document.getElementById('cartItems');
             const checkoutBtn = document.getElementById('checkoutBtn');
             const clearBtn = document.getElementById('clearBtn');
             
+            // Get discount selection
+            const discountSelect = document.getElementById('discountSelector');
+            discountType = discountSelect.value;
+
             if (cart.length === 0) {
                 container.innerHTML = `
                     <div class="flex flex-col items-center justify-center h-full text-gray-600 space-y-4">
@@ -569,6 +766,7 @@
                 `;
                 document.getElementById('cartSubtotal').innerText = '₱0.00';
                 document.getElementById('cartTax').innerText = '₱0.00';
+                document.getElementById('cartDiscount').innerText = '-₱0.00';
                 document.getElementById('cartTotal').innerText = '₱0.00';
                 checkoutBtn.disabled = true;
                 clearBtn.disabled = true;
@@ -599,22 +797,76 @@
                 </div>
             `).join('');
 
-            // Totals Calculation (12% VAT)
-            const subtotal = cart.reduce((acc, c) => acc + (c.item.price * c.quantity), 0);
-            const tax = subtotal * 0.12;
-            const total = subtotal + tax;
+            // Calculations
+            // Base Subtotal (Inclusive of VAT usually, but for calculation we assume prices are VAT inclusive)
+            // If Discount (Senior/PWD):
+            // 1. Remove VAT: Amount / 1.12
+            // 2. Apply 20% Discount: (Amount / 1.12) * 0.20
+            // 3. Final: (Amount / 1.12) - Discount
+            
+            const rawTotal = cart.reduce((acc, c) => acc + (c.item.price * c.quantity), 0);
+            let finalTotal = rawTotal;
+            let vatAmount = 0;
+            let discountAmount = 0;
 
-            document.getElementById('cartSubtotal').innerText = formatPrice(subtotal);
-            document.getElementById('cartTax').innerText = formatPrice(tax);
-            document.getElementById('cartTotal').innerText = formatPrice(total);
+            if (discountType === 'PWD' || discountType === 'Senior') {
+                // VAT Exempt Logic
+                const netOfVat = rawTotal / 1.12;
+                discountAmount = netOfVat * 0.20;
+                finalTotal = netOfVat - discountAmount;
+                
+                // UI Updates for Exempt
+                document.getElementById('vatRow').style.textDecoration = 'line-through';
+                document.getElementById('vatRow').style.opacity = '0.5';
+                document.getElementById('discountRow').classList.remove('hidden');
+                document.getElementById('cartTax').innerText = '₱0.00 (Exempt)';
+            } else {
+                // Standard Logic
+                vatAmount = rawTotal * 0.12; // Just displaying the VAT portion of the total
+                finalTotal = rawTotal + vatAmount; // Wait, usually menu prices are VAT inclusive.
+                // Correction: If prices are exclusive in prev logic: "subtotal + tax". 
+                // Let's stick to the previous logic: Subtotal + 12% VAT = Total.
+                
+                document.getElementById('vatRow').style.textDecoration = 'none';
+                document.getElementById('vatRow').style.opacity = '1';
+                document.getElementById('discountRow').classList.add('hidden');
+                document.getElementById('cartTax').innerText = formatPrice(vatAmount);
+            }
+
+            document.getElementById('cartSubtotal').innerText = formatPrice(rawTotal);
+            document.getElementById('cartDiscount').innerText = `-${formatPrice(discountAmount)}`;
+            document.getElementById('cartTotal').innerText = formatPrice(finalTotal);
             
             lucide.createIcons();
         }
 
         // --- Checkout & Database Logic ---
+        window.togglePaymentFields = function() {
+            const method = document.querySelector('input[name="paymentMethod"]:checked').value;
+            if (method === 'Card') {
+                document.getElementById('cardFields').classList.remove('hidden');
+                document.getElementById('counterMsg').classList.add('hidden');
+            } else {
+                document.getElementById('cardFields').classList.add('hidden');
+                document.getElementById('counterMsg').classList.remove('hidden');
+            }
+        }
+
         window.openPaymentModal = function() {
             if (cart.length === 0) return;
             document.getElementById('paymentTotalAmount').innerText = document.getElementById('cartTotal').innerText;
+            
+            // Show/Hide ID input based on discount
+            const idField = document.getElementById('discountIdField');
+            const idInput = document.getElementById('discountIdInput');
+            if (discountType !== 'None') {
+                idField.classList.remove('hidden');
+                idInput.required = true;
+            } else {
+                idField.classList.add('hidden');
+                idInput.required = false;
+            }
+
             document.getElementById('paymentModal').classList.remove('hidden');
             document.getElementById('paymentModal').classList.add('flex');
         };
@@ -623,6 +875,7 @@
             document.getElementById('paymentModal').classList.add('hidden');
             document.getElementById('paymentModal').classList.remove('flex');
             document.getElementById('paymentForm').reset();
+            window.togglePaymentFields(); // Reset view
         };
 
         window.processOrder = async function(e) {
@@ -634,60 +887,110 @@
             btn.disabled = true;
 
             const tableNo = document.getElementById('tableSelector').value;
-            const subtotal = cart.reduce((acc, c) => acc + (c.item.price * c.quantity), 0);
-            const total = subtotal + (subtotal * 0.12);
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            const discountId = document.getElementById('discountIdInput').value || 'N/A';
+            
+            // Recalculate totals for safe keeping
+            const rawTotal = cart.reduce((acc, c) => acc + (c.item.price * c.quantity), 0);
+            let finalTotal = rawTotal;
+            if (discountType === 'None') {
+                finalTotal = rawTotal + (rawTotal * 0.12);
+            } else {
+                const netOfVat = rawTotal / 1.12;
+                finalTotal = netOfVat - (netOfVat * 0.20);
+            }
 
             const orderData = {
                 table: tableNo,
+                orderType: orderType,
+                discountType: discountType,
+                discountId: discountId,
+                paymentMethod: paymentMethod,
                 items: cart.map(c => ({ id: c.item.id, name: c.item.name, qty: c.quantity, price: c.item.price })),
-                total: total,
-                status: 'Pending',
+                total: finalTotal,
                 timestamp: serverTimestamp()
             };
 
             try {
                 if (db && currentUser) {
                     const ordersRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
-                    await addDoc(ordersRef, orderData);
+                    const docRef = await addDoc(ordersRef, orderData);
+                    
                     showToast(`Order confirmed for Table ${tableNo}`);
                     window.closePaymentModal();
+                    
+                    // Show Receipt
+                    window.generateReceipt(docRef.id, orderData);
                     window.clearCart();
                 } else {
-                    throw new Error("Database not connected properly.");
+                    throw new Error("Database not connected.");
                 }
             } catch (error) {
                 console.error("Order processing failed:", error);
-                
                 let errorMsg = "Failed to process order.";
-                if (error.code === 'permission-denied') {
-                    errorMsg = "<strong>Database Permission Denied!</strong><br>You need to change your Firestore Rules to 'Test Mode'.<br>Go to Firestore > Rules > Change 'false' to 'true'.";
-                } else if (error.code === 'unavailable') {
-                    errorMsg = "Network Error. Check your internet connection.";
-                }
-                
-                // Show custom error toast
-                const toast = document.getElementById('toast');
-                const toastMsg = document.getElementById('toastMsg');
-                
-                // Style for error
-                toast.className = "fixed top-6 right-6 bg-red-900 text-white border border-red-500 px-6 py-4 rounded shadow-2xl transform transition-all duration-300 flex items-center gap-3 z-[100] font-medium";
-                toastMsg.innerHTML = errorMsg;
-                
-                toast.classList.remove('translate-x-[150%]');
-                
-                setTimeout(() => {
-                    toast.classList.add('translate-x-[150%]');
-                    // Reset style
-                    setTimeout(() => {
-                         toast.className = "fixed top-6 right-6 bg-gold text-luxury-900 px-6 py-4 rounded shadow-2xl transform transition-all duration-300 translate-x-[150%] flex items-center gap-3 z-[100] font-medium";
-                    }, 300);
-                }, 6000);
-                
+                if (error.code === 'permission-denied') errorMsg = "Database Permission Denied. Set rules to true.";
+                showToast(errorMsg);
             } finally {
                 btn.innerHTML = originalContent;
                 btn.disabled = false;
             }
         };
+
+        // --- Receipt Logic ---
+        window.generateReceipt = function(orderId, data) {
+            document.getElementById('receiptDate').innerText = new Date().toLocaleString();
+            document.getElementById('receiptId').innerText = `#${orderId.substring(0, 6).toUpperCase()}`;
+            document.getElementById('receiptTable').innerText = data.table;
+            document.getElementById('receiptType').innerText = data.orderType;
+            
+            // Discount Info
+            if (data.discountType !== 'None') {
+                document.getElementById('receiptDiscountTypeRow').classList.remove('hidden');
+                document.getElementById('receiptDiscountIdRow').classList.remove('hidden');
+                document.getElementById('receiptDiscountType').innerText = data.discountType;
+                document.getElementById('receiptDiscountId').innerText = data.discountId;
+            } else {
+                document.getElementById('receiptDiscountTypeRow').classList.add('hidden');
+                document.getElementById('receiptDiscountIdRow').classList.add('hidden');
+            }
+
+            // Items
+            const tbody = document.getElementById('receiptItems');
+            let subtotal = 0;
+            tbody.innerHTML = data.items.map(i => {
+                subtotal += i.price * i.qty;
+                return `
+                <tr>
+                    <td class="py-1">${i.qty}</td>
+                    <td class="py-1">${i.name}</td>
+                    <td class="py-1 text-right">${formatPrice(i.price * i.qty)}</td>
+                </tr>`;
+            }).join('');
+
+            // Totals
+            document.getElementById('receiptSubtotal').innerText = formatPrice(subtotal);
+            document.getElementById('receiptTotal').innerText = formatPrice(data.total);
+
+            if (data.discountType !== 'None') {
+                 // Exempt
+                 document.getElementById('receiptVat').innerText = '0.00 (Exempt)';
+                 document.getElementById('receiptDiscRow').classList.remove('hidden');
+                 const netOfVat = subtotal / 1.12;
+                 const discount = netOfVat * 0.20;
+                 document.getElementById('receiptDiscAmt').innerText = formatPrice(discount);
+            } else {
+                 document.getElementById('receiptVat').innerText = formatPrice(subtotal * 0.12);
+                 document.getElementById('receiptDiscRow').classList.add('hidden');
+            }
+
+            document.getElementById('receiptModal').classList.remove('hidden');
+            document.getElementById('receiptModal').classList.add('flex');
+        }
+
+        window.closeReceipt = function() {
+            document.getElementById('receiptModal').classList.add('hidden');
+            document.getElementById('receiptModal').classList.remove('flex');
+        }
 
         // --- Admin Dashboard Logic ---
         window.openAdminLogin = function() {
@@ -755,6 +1058,15 @@
                         const timeB = b.timestamp ? b.timestamp.toMillis() : 0;
                         return timeB - timeA;
                     });
+                    
+                    // --- KPI Calculation ---
+                    const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+                    const totalOrders = orders.length;
+                    const avgOrder = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+                    document.getElementById('kpiRevenue').innerText = formatPrice(totalRevenue);
+                    document.getElementById('kpiOrders').innerText = totalOrders;
+                    document.getElementById('kpiAvg').innerText = formatPrice(avgOrder);
 
                     if (orders.length === 0) {
                         listEl.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500">No active orders found.</td></tr>`;
@@ -772,14 +1084,10 @@
                         return `
                             <tr class="hover:bg-luxury-700/50 transition-colors">
                                 <td class="p-4 font-mono text-gold text-xs">#${shortId}</td>
-                                <td class="p-4 font-bold text-white">T-${order.table.toString().padStart(2, '0')}</td>
+                                <td class="p-4 font-bold text-white">T-${order.table} <span class="text-gray-500 text-xs font-normal">(${order.orderType})</span></td>
                                 <td class="p-4 text-gray-300 max-w-xs truncate" title="${itemsSummary}">${itemsSummary}</td>
+                                <td class="p-4 text-gray-400 text-xs">${order.paymentMethod}</td>
                                 <td class="p-4 text-right font-medium text-white">${formatPrice(order.total || 0)}</td>
-                                <td class="p-4">
-                                    <span class="bg-blue-900/30 text-blue-400 border border-blue-900/50 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">
-                                        ${order.status}
-                                    </span>
-                                </td>
                                 <td class="p-4 text-right text-gray-500 text-sm">${timeString}</td>
                             </tr>
                         `;
@@ -787,14 +1095,13 @@
                 },
                 (error) => {
                     console.error("Firestore Listen Error:", error);
-                    listEl.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500">Failed to load orders. Make sure you set your Database Rules to Test Mode!</td></tr>`;
                 }
             );
         }
 
         function showToast(msg) {
             const toast = document.getElementById('toast');
-            document.getElementById('toastMsg').innerHTML = msg; // Changed to innerHTML to support breaks
+            document.getElementById('toastMsg').innerHTML = msg;
             
             toast.classList.remove('translate-x-[150%]');
             setTimeout(() => {

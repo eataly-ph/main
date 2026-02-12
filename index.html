@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eataly POS | Table Ordering</title>
+    <title>Eataly | Table Ordering</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -160,7 +160,7 @@
         <!-- Top Header -->
         <header class="h-16 md:h-20 border-b border-luxury-600 flex items-center justify-between px-4 md:px-8 bg-luxury-900/50 shrink-0">
             <div>
-                <h1 class="font-serif text-xl md:text-2xl text-white tracking-wide">Eataly</h1>
+                <h1 class="font-serif text-xl md:text-2xl text-white tracking-wide">EATALY</h1>
                 <p class="text-[10px] md:text-xs text-gray-400 mt-1 hidden md:block">Venice Grand Canal Mall, Taguig</p>
             </div>
             
@@ -564,56 +564,56 @@
         // --- FULL MENU DATA ---
         const menuData = [
             // Soup
-            { id: 's1', name: 'Tomato Consommé', price: 349, category: 'Soups', desc: 'Clarified, intense tomato broth served chilled or warm, garnished with micro-basil.', img: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=400&q=80' },
-            { id: 's2', name: 'Corn Chowder', price: 270, category: 'Soups', desc: 'Velvety sweet corn reduction finished with a swirl of chili oil and toasted pancetta.', img: 'https://images.unsplash.com/photo-1603046891744-1f76eb10efa1?auto=format&fit=crop&w=400&q=80' },
-            { id: 's3', name: 'Minestrone di Verdure', price: 285, category: 'Soups', desc: 'Refined take on the classic; clear vegetable broth featuring precision-cut greens.', img: 'https://images.unsplash.com/photo-1548943487-a2e4f43b485f?auto=format&fit=crop&w=400&q=80' },
-            { id: 's4', name: 'Zuppa di Pesce', price: 395, category: 'Soups', desc: 'Delicate seafood broth infused with premium saffron, poached clams and fennel.', img: 'https://images.unsplash.com/photo-1574782090885-1b1511202863?auto=format&fit=crop&w=400&q=80' },
-            { id: 's5', name: 'Creamy Wild Mushroom', price: 320, category: 'Soups', desc: 'Earthy blend of Porcini and Portobello mushrooms, finished with fresh thyme.', img: 'https://images.unsplash.com/photo-1543339494-b4cd4f7ba686?auto=format&fit=crop&w=400&q=80' },
-            { id: 's6', name: 'Lobster Bisque', price: 450, category: 'Soups', desc: 'Rich shellfish reduction finished with brandy and butter-poached lobster bits.', img: 'https://images.unsplash.com/photo-1625944227303-c60f4e3ed280?auto=format&fit=crop&w=400&q=80' },
+            { id: 's1', name: 'Corn Chowder', price: 270, category: 'Soups', desc: 'Velvety sweet corn reduction finished with a swirl of chili oil and toasted pancetta crumbs.', img: 'https://i.pinimg.com/1200x/10/7c/37/107c37c71bdeff4b384662b408269099.jpg' },
+            { id: 's2', name: 'Minestrone di Verdure', price: 285, category: 'Soups', desc: 'Refined take on the classic; clear vegetable broth featuring precision-cut seasonal greens and a dollop of Genovese pesto.', img: 'https://i.pinimg.com/736x/7e/a0/b1/7ea0b1d00e7f58431d7fde74beda3b06.jpg' },
+            { id: 's3', name: 'Zuppa di Pesce', price: 395, category: 'Soups', desc: 'Delicate seafood broth infused with premium saffron, featuring poached clams and a hint of fennel.', img: 'https://i.pinimg.com/1200x/9d/41/d0/9d41d0091ef87b3ba948ec2f60b7df56.jpg' },
+            { id: 's4', name: 'Creamy Wild Mushroom & Thyme', price: 320, category: 'Soups', desc: 'Earthy blend of Porcini and Portobello mushrooms, finished with fresh thyme and a touch of truffle foam.', img: 'https://i.pinimg.com/1200x/28/d5/66/28d566ea2476bb16b6f8a9705569c71d.jpg' },
+            { id: 's5', name: 'Lobster Bisque', price: 450, category: 'Soups', desc: 'Rich shellfish reduction finished with brandy and butter-poached lobster bits.', img: 'https://i.pinimg.com/1200x/30/ba/24/30ba24a3a6e6e1b7497563446bc50c00.jpg' },
             
             // Pasta
-            { id: 'p1', name: 'Lobster Ravioli', price: 820, category: 'Pasta', desc: 'Hand-stuffed pillows of lobster meat tossed in a nutty beurre noisette.', img: 'https://images.unsplash.com/photo-1588013273468-315fd88ea34c?auto=format&fit=crop&w=400&q=80' },
-            { id: 'p2', name: 'Pappardelle al Cinghiale', price: 740, category: 'Pasta', desc: 'Wide ribbon pasta served with a 12-hour slow-cooked wild boar ragu.', img: 'https://images.unsplash.com/photo-1621996316585-84462153df1d?auto=format&fit=crop&w=400&q=80' },
-            { id: 'p3', name: 'Squid Ink Linguine', price: 790, category: 'Pasta', desc: 'Dramatic black pasta tossed in light garlic-white wine sauce with scallops.', img: 'https://images.unsplash.com/photo-1552611052-d336a5a065ff?auto=format&fit=crop&w=400&q=80' },
-            { id: 'p4', name: 'Spaghetti alla Chitarra', price: 680, category: 'Pasta', desc: 'Square-cut spaghetti paired with tender Wagyu beef meatballs.', img: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=400&q=80' },
-            { id: 'p5', name: 'Agnoletti del Plin', price: 650, category: 'Pasta', desc: 'Traditional pinched pasta filled with roasted veal and pork in meat jus.', img: 'https://images.unsplash.com/photo-1608897013039-887f214b985c?auto=format&fit=crop&w=400&q=80' },
-            { id: 'p6', name: 'Gnocchi Gorgonzola', price: 610, category: 'Pasta', desc: 'Soft potato pillows in a creamy blue cheese sauce, topped with toasted walnuts.', img: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=400&q=80' },
+            { id: 'p1', name: 'Lobster Ravioli', price: 820, category: 'Pasta', desc: 'Hand-stuffed pillows of lobster meat tossed in a nutty beurre noisette with crispy sage.', img: 'https://i.pinimg.com/736x/e2/8a/6d/e28a6d0eb3af67a93e2d1304ecf25933.jpg' },
+            { id: 'p2', name: 'Pappardelle al Cinghiale', price: 740, category: 'Pasta', desc: 'Wide ribbon pasta served with a 12-hour slow-cooked wild boar ragu and shaved Pecorino Romano.', img: 'https://i.pinimg.com/736x/03/24/33/032433427eeb8fe93e620ba72f7c47d2.jpg' },
+            { id: 'p3', name: 'Squid Ink Linguine', price: 790, category: 'Pasta', desc: 'Dramatic black pasta tossed in light garlic-white wine sauce with pan-seared Hokkaido scallops.', img: 'https://i.pinimg.com/1200x/9c/88/fd/9c88fd0bc4476c84f6f082ac0cbcb52e.jpg' },
+            { id: 'p4', name: 'Wagyu Spaghetti', price: 680, category: 'Pasta', desc: 'Square-cut spaghetti paired with tender Wagyu beef meatballs in a rich San Marzano tomato sauce.', img: 'https://i.pinimg.com/1200x/9c/88/fd/9c88fd0bc4476c84f6f082ac0cbcb52e.jpg' },
+            { id: 'p5', name: 'Gnocchi Gorgonzola', price: 610, category: 'Pasta', desc: 'Soft potato pillows in a creamy blue cheese sauce, topped with toasted walnuts for texture.', img: 'https://i.pinimg.com/1200x/f9/b4/8d/f9b48d1e1a72210f5b1ac5883e93d74b.jpg' },
 
             // Mains
-            { id: 'm1', name: 'Truffle Fettuccine', price: 750, category: 'Mains', desc: 'Luxurious fettuccine bathed in a velvet Parmigiano-Reggiano cream and truffle oil.', img: 'https://images.unsplash.com/photo-1645112411341-6c4fd023714a?auto=format&fit=crop&w=400&q=80' },
-            { id: 'm2', name: 'Osso Buco Milanese', price: 975, category: 'Mains', desc: 'Braised veal shanks served with gremolata and saffron risotto.', img: 'https://images.unsplash.com/photo-1544928147-79a2dbc1f389?auto=format&fit=crop&w=400&q=80' },
-            { id: 'm3', name: 'Seafood Risotto', price: 850, category: 'Mains', desc: 'Slow-stirred Arborio rice with prawns, mussels, and squid.', img: 'https://images.unsplash.com/photo-1616295552943-b183dd941bf5?auto=format&fit=crop&w=400&q=80' },
-            { id: 'm4', name: 'Margherita Pizza', price: 895, category: 'Mains', desc: 'Neapolitan-style thin crust topped with buffalo mozzarella and basil.', img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=400&q=80' },
-            { id: 'm5', name: 'Lasagna al Forno', price: 625, category: 'Mains', desc: 'Layers of fresh egg pasta, rich bolognese, and creamy béchamel.', img: 'https://images.unsplash.com/photo-1614961908612-921bc699b80b?auto=format&fit=crop&w=400&q=80' },
-            { id: 'm6', name: 'Pan-Seared Branzino', price: 1150, category: 'Mains', desc: 'Mediterranean Sea Bass with lemon-caper butter sauce.', img: 'https://images.unsplash.com/photo-1580476262798-bddd9f4b7369?auto=format&fit=crop&w=400&q=80' },
-            { id: 'm7', name: 'Bistecca Fiorentina', price: 1850, category: 'Mains', desc: 'Premium T-bone steak grilled over high heat with rosemary.', img: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80' },
-            { id: 'm8', name: 'Herb Lamb Chops', price: 1400, category: 'Mains', desc: 'Tender lamb racks coated in parsley-garlic crust, balsamic reduction.', img: 'https://images.unsplash.com/photo-1600891964092-4316c288032e?auto=format&fit=crop&w=400&q=80' },
-            { id: 'm9', name: 'Chicken Saltimbocca', price: 720, category: 'Mains', desc: 'Chicken wrapped in prosciutto and sage, white wine butter glaze.', img: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=400&q=80' },
+            { id: 'm1', name: 'Truffle Fettuccine', price: 750, category: 'Mains', desc: 'Luxurious fettuccine bathed in a velvet Parmigiano-Reggiano cream and infused with black truffle oil.', img: 'https://i.pinimg.com/1200x/8b/b5/3f/8bb53f4696675b78890be47602f9a2ca.jpg' },
+            { id: 'm2', name: 'Osso Buco Milanese', price: 975, category: 'Mains', desc: 'Tender, braised veal shanks served with a bright gremolata and creamy saffron risotto.', img: 'https://i.pinimg.com/736x/ee/31/92/ee3192de722e21566f83cddb2abb236b.jpg' },
+            { id: 'm3', name: 'Seafood Risotto', price: 850, category: 'Mains', desc: 'Slow-stirred Arborio rice with a medley of prawns, mussels, and squid in a light tomato-seafood base.', img: 'https://i.pinimg.com/1200x/63/6e/f9/636ef9e0c5f683365d4f05612a3e8aab.jpg' },
+            { id: 'm4', name: 'Margherita Pizza', price: 895, category: 'Mains', desc: 'Neapolitan-style thin crust topped with buffalo mozzarella, fresh basil, and extra virgin olive oil.', img: 'https://i.pinimg.com/1200x/57/e7/a1/57e7a19334571946391a7430fcb86202.jpg' },
+            { id: 'm5', name: 'Lasagna al Forno', price: 625, category: 'Mains', desc: 'Layers of fresh egg pasta, rich bolognese, and creamy béchamel, baked until golden and bubbly.', img: 'https://i.pinimg.com/1200x/3f/20/f1/3f20f1f2ae4c5f10527e47bf1ab49876.jpg' },
+            { id: 'm6', name: 'Pan-Seared Branzino', price: 1150, category: 'Mains', desc: 'Mediterranean Sea Bass served with a bright lemon-caper butter sauce and blistered cherry tomatoes.', img: 'https://i.pinimg.com/1200x/60/86/b9/6086b9860741514ad4f1add74b756d88.jpg' },
+            { id: 'm7', name: 'Bistecca Fiorentina', price: 1850, category: 'Mains', desc: 'A premium T-bone steak grilled over high heat, seasoned simply with rosemary and Maldon sea salt.', img: 'https://i.pinimg.com/1200x/a6/25/46/a6254620f8968cae9ad42ca14fc3ba9e.jpg' },
+            { id: 'm8', name: 'Herb Lamb Chops', price: 1400, category: 'Mains', desc: 'Tender lamb racks coated in a parsley-garlic crust, served with a 25-year aged balsamic reduction.', img: 'https://i.pinimg.com/1200x/c2/a4/6b/c2a46b08cc0b6656fc7215cfb47d9ee4.jpg' },
+            { id: 'm9', name: 'Chicken Saltimbocca', price: 720, category: 'Mains', desc: 'Chicken cutlets wrapped in salty prosciutto and fresh sage, pan-fried in a white wine and butter glaze.', img: 'https://i.pinimg.com/1200x/db/c5/12/dbc5129bb8469a4e4c8956bc60b98e93.jpg' },
 
             // Sides
-            { id: 'sd1', name: 'Garlic Parmesan Bread', price: 59, category: 'Sides', desc: 'Toasted ciabatta rubbed with fresh garlic and dusted with aged Parmesan.', img: 'https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?auto=format&fit=crop&w=400&q=80' },
-            { id: 'sd2', name: 'Caprese Salad', price: 79, category: 'Sides', desc: 'Slices of fresh mozzarella and tomatoes drizzled with balsamic glaze.', img: 'https://images.unsplash.com/photo-1529312266912-b33cfce2eefd?auto=format&fit=crop&w=400&q=80' },
-            { id: 'sd3', name: 'Roasted Vegetables', price: 89, category: 'Sides', desc: 'A colorful medley of zucchini, peppers, and eggplant roasted with oregano.', img: 'https://images.unsplash.com/photo-1580210086968-38cb88f50435?auto=format&fit=crop&w=400&q=80' },
-            { id: 'sd4', name: 'Truffle Polenta Fries', price: 110, category: 'Sides', desc: 'Crispy cornmeal batons served with a side of truffle aioli.', img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=400&q=80' },
-            { id: 'sd5', name: 'Sautéed Broccolini', price: 95, category: 'Sides', desc: 'Tender stems tossed with garlic, olive oil, and a pinch of red chili flakes.', img: 'https://images.unsplash.com/photo-1551893665-f843f600794e?auto=format&fit=crop&w=400&q=80' },
-            { id: 'sd6', name: 'Creamy Mashed Potato', price: 85, category: 'Sides', desc: 'Whipped Yukon Gold potatoes finished with high-quality Italian olive oil.', img: 'https://images.unsplash.com/photo-1633504581559-0f62243d81b4?auto=format&fit=crop&w=400&q=80' },
-            { id: 'sd7', name: 'Arugula Salad', price: 105, category: 'Sides', desc: 'Peppery wild arugula tossed in a light lemon vinaigrette with parmesan.', img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=400&q=80' },
-            { id: 'sd8', name: 'Risotto Milanese', price: 150, category: 'Sides', desc: 'A side portion of our signature saffron-infused creamy rice.', img: 'https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?auto=format&fit=crop&w=400&q=80' },
+            { id: 'sd1', name: 'Garlic Parmesan Bread', price: 59, category: 'Sides', desc: 'Toasted ciabatta rubbed with fresh garlic and dusted with aged Parmesan.', img: 'https://i.pinimg.com/1200x/0f/3f/27/0f3f27b34cb89585a4a4a660cd7fdc9e.jpg' },
+            { id: 'sd2', name: 'Caprese Salad', price: 79, category: 'Sides', desc: 'Slices of fresh mozzarella and tomatoes drizzled with balsamic glaze.', img: 'https://i.pinimg.com/1200x/67/36/26/673626ac9fcf3abdc1e518d6dd9740fe.jpg' },
+            { id: 'sd3', name: 'Roasted Vegetables', price: 89, category: 'Sides', desc: 'A colorful medley of zucchini, peppers, and eggplant roasted with oregano.', img: 'https://i.pinimg.com/736x/c1/d8/67/c1d8671912ecca69d76bd917f1d9d9ef.jpg' },
+            { id: 'sd4', name: 'Truffle Polenta Fries', price: 110, category: 'Sides', desc: 'Crispy cornmeal batons served with a side of truffle aioli.', img: 'https://i.pinimg.com/736x/96/dd/da/96ddda62e513368c6e9277972bdd46ba.jpg' },
+            { id: 'sd5', name: 'Sautéed Broccolini', price: 95, category: 'Sides', desc: 'Tender stems tossed with garlic, olive oil, and a pinch of red chili flakes.', img: 'https://i.pinimg.com/1200x/d9/f6/74/d9f6747e5ec0d0f2b1077b9fe96cb7c7.jpg' },
+            { id: 'sd6', name: 'Creamy Mashed Potato', price: 85, category: 'Sides', desc: 'Whipped Yukon Gold potatoes finished with high-quality Italian olive oil.', img: 'https://i.pinimg.com/1200x/7a/8d/bb/7a8dbbbc4489866a74bd4df671bc3e25.jpg' },
+            { id: 'sd7', name: 'Arugula Salad', price: 105, category: 'Sides', desc: 'Peppery wild arugula tossed in a light lemon vinaigrette.', img: 'https://i.pinimg.com/736x/41/20/99/4120993251be2722169127458d93e2dc.jpg' },
+            { id: 'sd8', name: 'Risotto Milanese', price: 150, category: 'Sides', desc: 'A side portion of our signature saffron-infused creamy rice.', img: 'https://i.pinimg.com/1200x/18/a1/0a/18a10a2bef01e826bc4d373c83624ce4.jpg' },
 
             // Desserts
-            { id: 'd1', name: 'Classic Tiramisu', price: 200, category: 'Desserts', desc: 'Espresso-soaked ladyfingers layered with mascarpone cream.', img: 'https://images.unsplash.com/photo-1571115177098-24c42de1bd0f?auto=format&fit=crop&w=400&q=80' },
-            { id: 'd2', name: 'Panna Cotta', price: 159, category: 'Desserts', desc: 'Silky-smooth cooked cream dessert topped with forest berry coulis.', img: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=400&q=80' },
-            { id: 'd3', name: 'Affogato al Caffè', price: 149, category: 'Desserts', desc: 'Vanilla bean gelato drowned in a hot shot of ristretto espresso.', img: 'https://images.unsplash.com/photo-1582234372722-50d7ccc30ebd?auto=format&fit=crop&w=400&q=80' },
-            { id: 'd4', name: 'Artisan Gelato', price: 199, category: 'Desserts', desc: 'Three scoops: Pistachio, Chocolate, or Stracciatella.', img: 'https://images.unsplash.com/photo-1563805042-7684c8a9e9cb?auto=format&fit=crop&w=400&q=80' },
-            { id: 'd5', name: 'Sicilian Cannoli', price: 180, category: 'Desserts', desc: 'Crispy pastry shells filled with sweet ricotta and pistachios.', img: 'https://images.unsplash.com/photo-1621236378699-8597faa6a48a?auto=format&fit=crop&w=400&q=80' },
-            { id: 'd6', name: 'Warm Choco Fondant', price: 240, category: 'Desserts', desc: 'Molten center dark chocolate cake with hazelnut praline.', img: 'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?auto=format&fit=crop&w=400&q=80' },
-            { id: 'd7', name: 'Lemon Sorbet', price: 140, category: 'Desserts', desc: 'Refreshing citrus sorbet garnished with fresh mint.', img: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?auto=format&fit=crop&w=400&q=80' },
+            { id: 'd1', name: 'Classic Tiramisu', price: 200, category: 'Desserts', desc: 'Espresso-soaked ladyfingers layered with mascarpone cream and dusted with dark cocoa.', img: 'https://i.pinimg.com/1200x/41/07/10/410710fdf40a4155169256ff0a083aca.jpg' },
+            { id: 'd2', name: 'Affogato al Caffè', price: 149, category: 'Desserts', desc: 'A scoop of vanilla bean gelato drowned in a hot shot of ristretto espresso.', img: 'https://i.pinimg.com/1200x/51/6b/0b/516b0b7583a4dae01808338fa8dcd19c.jpg' },
+            { id: 'd3', name: 'Sicilian Cannoli', price: 180, category: 'Desserts', desc: 'Crispy pastry shells filled with sweet ricotta cream and dipped in crushed pistachios.', img: 'https://i.pinimg.com/1200x/b1/64/7b/b1647b07b37020b45333da0f5a458f72.jpg' },
+            { id: 'd4', name: 'Warm Choco Fondant', price: 240, category: 'Desserts', desc: 'A decadent dark chocolate cake with a molten center, served with hazelnut praline.', img: 'https://i.pinimg.com/736x/61/bc/d7/61bcd7ca00f1ba927f12692545d74a71.jpg' },
+            { id: 'd5', name: 'Lemon Sorbet', price: 140, category: 'Desserts', desc: 'A refreshing, palate-cleansing citrus sorbet garnished with fresh mint leaves.', img: 'https://i.pinimg.com/1200x/eb/be/9b/ebbe9b2a4fc36eef1c25c6d4b324235f.jpg' },
 
             // Drinks
-            { id: 'b1', name: 'Italian Spark. Water', price: 99, category: 'Drinks', desc: 'Crisp, chilled San Pellegrino served with lemon.', img: 'https://images.unsplash.com/photo-1600870535304-97cce30b35ed?auto=format&fit=crop&w=400&q=80' },
-            { id: 'b2', name: 'Limonata', price: 99, category: 'Drinks', desc: 'Zesty house-made soda using Sicilian lemons and cane sugar.', img: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=400&q=80' },
-            { id: 'b3', name: 'Espresso Romano', price: 129, category: 'Drinks', desc: 'Bold premium espresso shot served with a twist of lemon.', img: 'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&w=400&q=80' },
-            { id: 'b4', name: 'Mango Bellini', price: 220, category: 'Drinks', desc: 'Tropical fusion; chilled sparkling prosecco with fresh mango.', img: 'https://images.unsplash.com/photo-1556881286-fc6915169721?auto=format&fit=crop&w=400&q=80' }
+            { id: 'b1', name: 'Limonata', price: 99, category: 'Drinks', desc: 'A zesty, house-made soda using Sicilian lemons and a touch of organic cane sugar.', img: 'https://i.pinimg.com/736x/ea/f1/8f/eaf18f6770364c56308ee4e7295c9e5d.jpg' },
+            { id: 'b2', name: 'Espresso Romano', price: 129, category: 'Drinks', desc: 'A bold, premium espresso shot served with a twist of lemon peel.', img: 'https://i.pinimg.com/1200x/af/e9/1a/afe91ac4c028874a9c785bd4693ec12d.jpg' },
+            { id: 'b3', name: 'Mango Bellini', price: 220, category: 'Drinks', desc: 'Our signature tropical fusion; chilled Prosecco blended with silky Philippine mango purée.', img: 'https://i.pinimg.com/1200x/9e/cf/06/9ecf06622b7eb0f516bcb5dc4f46816d.jpg' },
+            { id: 'b4', name: 'Aperol Spritz', price: 320, category: 'Drinks', desc: 'The iconic Italian sunset in a glass; Aperol, Prosecco, and a splash of soda, garnished with a fresh orange slice.', img: 'https://i.pinimg.com/1200x/fd/e7/56/fde756aab58d33b527350b9b8c330a19.jpg' },
+            { id: 'b5', name: 'Classic Negroni', price: 350, category: 'Drinks', desc: 'A sophisticated balance of London Dry Gin, Campari, and Sweet Vermouth, stirred and served over a large ice sphere.', img: 'https://i.pinimg.com/736x/ec/47/65/ec476556ff1a6bcbef2da732abc73038.jpg' },
+            { id: 'b6', name: 'Aranciata Rossa', price: 110, category: 'Drinks', desc: 'A vibrant, sparkling blood orange soda made with fruit juice from the volcanic slopes of Mt. Etna.', img: 'https://i.pinimg.com/736x/48/44/a5/4844a500151deedfbf65e52d07b575c4.jpg' },
+            { id: 'b7', name: 'Iced Hibiscus Tea', price: 145, category: 'Drinks', desc: 'A refreshing, caffeine-free floral infusion with notes of forest berries and honey.', img: 'https://i.pinimg.com/1200x/8e/90/3f/8e903fa9780376ca9a3d3e788253052b.jpg' },
+            { id: 'b8', name: 'House Selection Wine', price: 280, category: 'Drinks', desc: 'Your choice of a crisp Pinot Grigio or a robust Chianti, carefully selected to pair with our main courses.', img: 'https://i.pinimg.com/736x/14/02/93/1402930337c09c14e075780c4b524de0.jpg' }
         ];
 
         const categories = ['All', 'Soups', 'Pasta', 'Mains', 'Sides', 'Desserts', 'Drinks'];
@@ -1007,7 +1007,7 @@
         // --- Receipt Logic ---
         window.generateReceipt = function(orderId, data, isAdmin) {
             // Use timestamp if available (for admin viewing past orders), otherwise current time
-            const dateStr = (isAdmin && data.timestamp) 
+            const dateStr = (data.timestamp && data.timestamp.toDate) 
                 ? new Date(data.timestamp.toDate()).toLocaleString() 
                 : new Date().toLocaleString();
                 
@@ -1245,4 +1245,3 @@
     </script>
 </body>
 </html>
-

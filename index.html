@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eataly POS | Table Ordering</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        luxury: {
+                            900: '#0a0a0a', // Deepest black
+                            800: '#141414', // POS background
+                            700: '#1f1f1f', // Card background
+                            600: '#2d2d2d', // Borders
+                        },
+                        gold: {
+                            DEFAULT: '#D4AF37',
+                            light: '#F3E5AB',
+                            dark: '#AA8529',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            background-color: #0a0a0a;
+            color: #f3f4f6;
+            overflow: hidden; /* Prevent body scroll for app-like feel */
+        }
+        
+        /* App Scrollbars */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #2d2d2d;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #D4AF37;
+        }
+
+        .menu-card-img {
+            transition: transform 0.5s ease;
+        }
+        .menu-card:hover .menu-card-img {
+            transform: scale(1.05);
+        }
+
+        /* Loading Spinner */
+        .loader {
+            border: 3px solid #2d2d2d;
+            border-bottom-color: #D4AF37;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="font-sans antialiased selection:bg-gold selection:text-luxury-900 h-screen w-screen flex">
+
+    <!-- Loading Overlay -->
+    <div id="initLoader" class="fixed inset-0 bg-luxury-900 z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
+        <h1 class="font-serif text-5xl text-gold mb-6 tracking-widest font-bold">EATALY</h1>
+        <div class="loader w-12 h-12"></div>
+        <p class="text-gray-400 mt-4 text-sm tracking-wider">INITIALIZING SYSTEM...</p>
+    </div>
+
+    <!-- ==================== MAIN POS LAYOUT ==================== -->
+    
+    <!-- Left Sidebar Navigation -->
+    <aside class="w-24 bg-luxury-900 border-r border-luxury-600 flex flex-col items-center py-6 z-20 shadow-2xl shrink-0">
+        <div class="w-12 h-12 bg-luxury-800 rounded-full flex items-center justify-center border border-gold mb-10 shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+            <span class="font-serif text-gold font-bold text-xl">E</span>
+        </div>
+
+        <nav class="flex-1 w-full flex flex-col gap-6">
+            <button onclick="window.switchView('menu')" class="nav-btn w-full flex flex-col items-center gap-2 text-gold border-r-2 border-gold py-2 relative group">
+                <i data-lucide="utensils-crossed" class="w-6 h-6"></i>
+                <span class="text-xs font-medium">Menu</span>
+            </button>
+            <button onclick="window.openAdminLogin()" class="nav-btn w-full flex flex-col items-center gap-2 text-gray-500 hover:text-white transition-colors border-r-2 border-transparent py-2 group">
+                <i data-lucide="lock" class="w-6 h-6"></i>
+                <span class="text-xs font-medium">Admin</span>
+            </button>
+        </nav>
+
+        <div class="mt-auto pt-6 border-t border-luxury-600 w-full flex flex-col items-center">
+            <button class="text-gray-500 hover:text-white transition-colors">
+                <i data-lucide="help-circle" class="w-6 h-6"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Center Content (Menu Grid) -->
+    <main class="flex-1 bg-luxury-800 flex flex-col min-w-0 h-full">
+        <!-- Top Header -->
+        <header class="h-20 border-b border-luxury-600 flex items-center justify-between px-8 bg-luxury-900/50 shrink-0">
+            <div>
+                <h1 class="font-serif text-2xl text-white tracking-wide">Table Ordering</h1>
+                <p class="text-xs text-gray-400 mt-1">Select your dishes below</p>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <div class="relative">
+                    <input type="text" id="searchInput" placeholder="Search menu..." 
+                        class="bg-luxury-700 text-white border border-luxury-600 rounded-lg py-2.5 px-4 pl-10 focus:outline-none focus:border-gold transition-colors w-72 text-sm shadow-inner">
+                    <i data-lucide="search" class="absolute left-3 top-3 w-4 h-4 text-gray-400"></i>
+                </div>
+                
+                <div class="flex items-center gap-3 bg-luxury-700 border border-luxury-600 rounded-lg px-4 py-2">
+                    <i data-lucide="map-pin" class="w-4 h-4 text-gold"></i>
+                    <select id="tableSelector" class="bg-transparent text-white text-sm focus:outline-none cursor-pointer appearance-none outline-none font-medium">
+                        <option value="1">Table 01</option>
+                        <option value="2">Table 02</option>
+                        <option value="3">Table 03</option>
+                        <option value="4" selected>Table 04</option>
+                        <option value="5">Table 05</option>
+                        <option value="6">Table 06</option>
+                        <option value="7">Table 07</option>
+                        <option value="8">Table 08</option>
+                        <option value="9">Table 09</option>
+                        <option value="10">Table 10</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <!-- Category Tabs -->
+        <div class="px-8 py-6 shrink-0">
+            <div class="flex overflow-x-auto gap-3 custom-scrollbar pb-2" id="categoryTabs">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+        <!-- Scrollable Grid -->
+        <div class="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar">
+            <div id="menuGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- Menu items injected via JS -->
+            </div>
+            
+            <div id="emptyState" class="hidden h-full flex flex-col items-center justify-center text-center py-20">
+                <i data-lucide="search-x" class="w-16 h-16 text-luxury-600 mb-4"></i>
+                <h3 class="font-serif text-2xl text-gray-400">No dishes found</h3>
+                <p class="text-gray-500 mt-2">Try adjusting your search terms.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Right Sidebar (Cart / Checkout) -->
+    <aside class="w-96 bg-luxury-900 border-l border-luxury-600 flex flex-col shrink-0 h-full shadow-2xl relative z-10">
+        <div class="p-6 border-b border-luxury-600 flex justify-between items-center shrink-0">
+            <h2 class="font-serif text-xl text-white flex items-center gap-2">
+                <i data-lucide="receipt" class="w-5 h-5 text-gold"></i> Current Order
+            </h2>
+            <span class="bg-luxury-700 text-gold text-xs font-bold px-3 py-1 rounded-full border border-luxury-600" id="orderTableBadge">T-04</span>
+        </div>
+        
+        <!-- Cart Items List -->
+        <div id="cartItems" class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+            <!-- Injected via JS -->
+            <div class="flex flex-col items-center justify-center h-full text-gray-600 space-y-4">
+                <i data-lucide="shopping-cart" class="w-12 h-12 opacity-30"></i>
+                <p class="text-sm">Scan items to begin order.</p>
+            </div>
+        </div>
+
+        <!-- Totals & Checkout -->
+        <div class="p-6 bg-luxury-800 border-t border-luxury-600 shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
+            <div class="space-y-3 mb-6">
+                <div class="flex justify-between text-gray-400 text-sm">
+                    <span>Subtotal</span>
+                    <span id="cartSubtotal" class="text-white">₱0.00</span>
+                </div>
+                <div class="flex justify-between text-gray-400 text-sm">
+                    <span>VAT (12%)</span>
+                    <span id="cartTax" class="text-white">₱0.00</span>
+                </div>
+                <div class="flex justify-between text-white font-serif text-xl border-t border-luxury-600 pt-3">
+                    <span>Payable Amount</span>
+                    <span id="cartTotal" class="text-gold font-bold">₱0.00</span>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="window.clearCart()" id="clearBtn" class="px-4 py-3 bg-luxury-700 text-white rounded hover:bg-red-900/50 hover:text-red-400 transition-colors border border-luxury-600 disabled:opacity-50">
+                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                </button>
+                <button onclick="window.openPaymentModal()" id="checkoutBtn" class="flex-1 bg-gold hover:bg-gold-light text-luxury-900 py-3 rounded font-bold tracking-wide transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                    <i data-lucide="credit-card" class="w-5 h-5"></i> Proceed to Pay
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ==================== OVERLAYS & MODALS ==================== -->
+
+    <!-- Payment Details Modal -->
+    <div id="paymentModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[70] hidden items-center justify-center p-4">
+        <div class="bg-luxury-900 border border-luxury-600 w-full max-w-md rounded-xl shadow-2xl relative overflow-hidden">
+            <div class="p-6 border-b border-luxury-600 bg-luxury-800 flex justify-between items-center">
+                <h2 class="font-serif text-xl text-gold">Secure Payment</h2>
+                <button onclick="window.closePaymentModal()" class="text-gray-400 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <form id="paymentForm" onsubmit="window.processOrder(event)" class="p-6">
+                <div class="flex justify-between items-center mb-6 bg-luxury-800 p-4 rounded-lg border border-luxury-600">
+                    <span class="text-gray-400 text-sm">Amount to Pay</span>
+                    <span class="text-2xl font-serif font-bold text-white" id="paymentTotalAmount">₱0.00</span>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-wider">Cardholder Name</label>
+                        <input type="text" required class="w-full bg-luxury-800 border border-luxury-600 text-white px-4 py-3 rounded focus:outline-none focus:border-gold transition-colors placeholder-gray-600" placeholder="John Doe">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-wider">Card Number</label>
+                        <div class="relative">
+                            <input type="text" required pattern="\d{16}" maxlength="16" class="w-full bg-luxury-800 border border-luxury-600 text-white px-4 py-3 pl-10 rounded focus:outline-none focus:border-gold transition-colors placeholder-gray-600 font-mono" placeholder="0000 0000 0000 0000">
+                            <i data-lucide="credit-card" class="absolute left-3 top-3.5 w-4 h-4 text-gray-500"></i>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-wider">Expiry Date</label>
+                            <input type="text" required pattern="(0[1-9]|1[0-2])\/\d{2}" maxlength="5" class="w-full bg-luxury-800 border border-luxury-600 text-white px-4 py-3 rounded focus:outline-none focus:border-gold transition-colors placeholder-gray-600 font-mono text-center" placeholder="MM/YY">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-wider">CVV</label>
+                            <input type="password" required pattern="\d{3,4}" maxlength="4" class="w-full bg-luxury-800 border border-luxury-600 text-white px-4 py-3 rounded focus:outline-none focus:border-gold transition-colors placeholder-gray-600 font-mono text-center" placeholder="•••">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="confirmPaymentBtn" class="w-full bg-gold hover:bg-gold-light text-luxury-900 py-3 rounded font-bold tracking-wide transition-colors mt-8 flex justify-center items-center gap-2">
+                    <i data-lucide="lock" class="w-4 h-4"></i> Pay Securely
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div id="adminLoginModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[80] hidden items-center justify-center p-4">
+        <div class="bg-luxury-900 border border-luxury-600 w-full max-w-sm rounded-xl p-8 shadow-2xl relative">
+            <button onclick="window.closeAdminLogin()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-luxury-800 rounded-full flex items-center justify-center border border-gold mx-auto mb-4">
+                    <i data-lucide="shield" class="w-8 h-8 text-gold"></i>
+                </div>
+                <h2 class="font-serif text-2xl text-white">Admin Portal</h2>
+                <p class="text-xs text-gray-500 mt-1">Authorized personnel only</p>
+            </div>
+
+            <form id="adminLoginForm" onsubmit="window.handleAdminLogin(event)" class="space-y-4">
+                <div>
+                    <input type="email" id="adminEmail" required class="w-full bg-luxury-800 border border-luxury-600 text-white px-4 py-3 rounded focus:outline-none focus:border-gold transition-colors placeholder-gray-500 text-sm" placeholder="Email Address">
+                </div>
+                <div>
+                    <input type="password" id="adminPassword" required class="w-full bg-luxury-800 border border-luxury-600 text-white px-4 py-3 rounded focus:outline-none focus:border-gold transition-colors placeholder-gray-500 text-sm" placeholder="Password">
+                </div>
+                <div id="loginError" class="text-red-400 text-xs hidden text-center bg-red-900/20 py-2 rounded">Invalid credentials.</div>
+                <button type="submit" class="w-full bg-luxury-700 hover:bg-gold hover:text-luxury-900 text-white py-3 rounded font-bold transition-colors mt-4">
+                    Authenticate
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard View (Full Overlay) -->
+    <div id="adminDashboard" class="fixed inset-0 bg-luxury-900 z-[90] hidden flex-col">
+        <header class="h-20 border-b border-luxury-600 flex items-center justify-between px-8 bg-luxury-800 shrink-0">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-luxury-900">
+                    <i data-lucide="shield-check" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="font-serif text-xl text-white">Manager Dashboard</h1>
+                    <p class="text-xs text-gold">Elaine Fernandez • Eataly</p>
+                </div>
+            </div>
+            
+            <button onclick="window.logoutAdmin()" class="flex items-center gap-2 text-gray-400 hover:text-white px-4 py-2 border border-luxury-600 rounded transition-colors bg-luxury-700">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                <span class="text-sm font-medium">Exit Admin</span>
+            </button>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+            <div class="max-w-7xl mx-auto">
+                <h2 class="text-lg font-medium text-white mb-6 flex items-center gap-2">
+                    <i data-lucide="list-ordered" class="w-5 h-5 text-gold"></i> Live Orders
+                </h2>
+
+                <div class="bg-luxury-800 border border-luxury-600 rounded-xl overflow-hidden shadow-2xl">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-luxury-700 border-b border-luxury-600 text-xs uppercase tracking-wider text-gray-400">
+                                <th class="p-4 font-medium">Order ID</th>
+                                <th class="p-4 font-medium">Table</th>
+                                <th class="p-4 font-medium">Items Summary</th>
+                                <th class="p-4 font-medium text-right">Total (Inc. VAT)</th>
+                                <th class="p-4 font-medium">Status</th>
+                                <th class="p-4 font-medium text-right">Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminOrdersList" class="divide-y divide-luxury-600 text-sm">
+                            <!-- Orders injected via JS -->
+                            <tr><td colspan="6" class="p-8 text-center text-gray-500">Loading orders...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Toast -->
+    <div id="toast" class="fixed top-6 right-6 bg-gold text-luxury-900 px-6 py-4 rounded shadow-2xl transform transition-all duration-300 translate-x-[150%] flex items-center gap-3 z-[100] font-medium">
+        <i data-lucide="check-circle" class="w-5 h-5"></i>
+        <span id="toastMsg">Action successful</span>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Data: Premium specific imagery for fine dining Italian ---
+        const menuData = [
+            { id: 's1', name: 'Tomato Consommé', price: 349, category: 'Soups', desc: 'Clarified tomato broth served chilled with heirloom pearls.', img: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=400&q=80' },
+            { id: 's2', name: 'Zuppa di Pesce', price: 395, category: 'Soups', desc: 'Saffron-infused seafood broth with poached clams and fennel.', img: 'https://images.unsplash.com/photo-1574782090885-1b1511202863?auto=format&fit=crop&w=400&q=80' },
+            { id: 's3', name: 'Lobster Bisque', price: 450, category: 'Soups', desc: 'Rich shellfish reduction finished with brandy and lobster bits.', img: 'https://images.unsplash.com/photo-1625944227303-c60f4e3ed280?auto=format&fit=crop&w=400&q=80' },
+            { id: 'p1', name: 'Lobster Ravioli', price: 820, category: 'Pasta', desc: 'Stuffed pillows in nutty beurre noisette with crispy sage.', img: 'https://images.unsplash.com/photo-1588013273468-315fd88ea34c?auto=format&fit=crop&w=400&q=80' },
+            { id: 'p2', name: 'Squid Ink Linguine', price: 790, category: 'Pasta', desc: 'Dramatic black pasta tossed with pan-seared Hokkaido scallops.', img: 'https://images.unsplash.com/photo-1552611052-d336a5a065ff?auto=format&fit=crop&w=400&q=80' },
+            { id: 'p3', name: 'Wagyu Spaghetti', price: 680, category: 'Pasta', desc: 'Square-cut pasta with Wagyu meatballs in San Marzano sauce.', img: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=400&q=80' },
+            { id: 'm1', name: 'Osso Buco Milanese', price: 975, category: 'Mains', desc: 'Braised veal shanks served with gremolata and saffron risotto.', img: 'https://images.unsplash.com/photo-1544928147-79a2dbc1f389?auto=format&fit=crop&w=400&q=80' },
+            { id: 'm2', name: 'Pan-Seared Branzino', price: 1150, category: 'Mains', desc: 'Mediterranean Sea Bass with lemon-caper butter sauce.', img: 'https://images.unsplash.com/photo-1580476262798-bddd9f4b7369?auto=format&fit=crop&w=400&q=80' },
+            { id: 'm3', name: 'Bistecca Fiorentina', price: 1850, category: 'Mains', desc: 'Premium T-bone steak grilled over high heat with rosemary.', img: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80' },
+            { id: 'sd1', name: 'Truffle Polenta Fries', price: 110, category: 'Sides', desc: 'Crispy cornmeal batons served with truffle aioli.', img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=400&q=80' },
+            { id: 'sd2', name: 'Caprese Salad', price: 79, category: 'Sides', desc: 'Fresh mozzarella and tomatoes with balsamic glaze.', img: 'https://images.unsplash.com/photo-1529312266912-b33cfce2eefd?auto=format&fit=crop&w=400&q=80' },
+            { id: 'd1', name: 'Classic Tiramisu', price: 200, category: 'Desserts', desc: 'Espresso-soaked ladyfingers layered with mascarpone cream.', img: 'https://images.unsplash.com/photo-1571115177098-24c42de1bd0f?auto=format&fit=crop&w=400&q=80' },
+            { id: 'd2', name: 'Warm Chocolate Fondant', price: 240, category: 'Desserts', desc: 'Molten center dark chocolate cake with hazelnut praline.', img: 'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?auto=format&fit=crop&w=400&q=80' },
+            { id: 'b1', name: 'Mango Bellini', price: 220, category: 'Drinks', desc: 'Tropical fusion; chilled sparkling prosecco with fresh mango.', img: 'https://images.unsplash.com/photo-1556881286-fc6915169721?auto=format&fit=crop&w=400&q=80' },
+            { id: 'b2', name: 'Espresso Romano', price: 129, category: 'Drinks', desc: 'Bold premium espresso shot served with a twist of lemon.', img: 'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&w=400&q=80' }
+        ];
+
+        const categories = ['All', 'Soups', 'Pasta', 'Mains', 'Sides', 'Desserts', 'Drinks'];
+        
+        // --- State ---
+        let cart = [];
+        let currentCategory = 'All';
+        let searchQuery = '';
+        let currentUser = null;
+        let unsubscribeOrders = null;
+
+        // --- Firebase Setup ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'eataly-pos-default';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : null;
+
+        let db, auth;
+
+        // --- Initialize App & Firebase ---
+        async function init() {
+            lucide.createIcons();
+            
+            // UI Init
+            renderCategoryTabs();
+            renderMenu();
+            updateCartUI();
+
+            // Search Listeners
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                searchQuery = e.target.value.toLowerCase();
+                renderMenu();
+            });
+
+            // Table Listener
+            document.getElementById('tableSelector').addEventListener('change', (e) => {
+                document.getElementById('orderTableBadge').innerText = `T-${e.target.value.padStart(2, '0')}`;
+            });
+
+            // Firebase Init
+            if (firebaseConfig) {
+                try {
+                    const app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+
+                    // Authenticaton is MANDATORY before any Firestore queries
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+
+                    onAuthStateChanged(auth, (user) => {
+                        currentUser = user;
+                        // Hide loader once auth state is resolved
+                        setTimeout(() => {
+                            document.getElementById('initLoader').style.opacity = '0';
+                            setTimeout(() => document.getElementById('initLoader').style.display = 'none', 500);
+                        }, 500);
+                    });
+                } catch (err) {
+                    console.error("Firebase init error:", err);
+                    document.getElementById('initLoader').innerHTML = `<p class="text-red-500">System Error. Please reload.</p>`;
+                }
+            } else {
+                // Fallback for environment without Firebase (mock mode)
+                console.warn("No Firebase config found. Running in local mock mode.");
+                setTimeout(() => {
+                    document.getElementById('initLoader').style.opacity = '0';
+                    setTimeout(() => document.getElementById('initLoader').style.display = 'none', 500);
+                }, 500);
+            }
+        }
+
+        // --- POS Rendering Logic ---
+        function formatPrice(num) {
+            return `₱${num.toFixed(2)}`;
+        }
+
+        function renderCategoryTabs() {
+            const container = document.getElementById('categoryTabs');
+            container.innerHTML = categories.map(cat => `
+                <button onclick="window.setCategory('${cat}')" 
+                    class="px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 border flex-shrink-0 
+                    ${currentCategory === cat ? 'bg-gold text-luxury-900 border-gold shadow-[0_0_10px_rgba(212,175,55,0.4)]' : 'bg-luxury-700 text-gray-300 border-luxury-600 hover:border-gray-400'}">
+                    ${cat}
+                </button>
+            `).join('');
+        }
+
+        window.setCategory = function(cat) {
+            currentCategory = cat;
+            renderCategoryTabs();
+            renderMenu();
+        };
+
+        function renderMenu() {
+            const grid = document.getElementById('menuGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            const filteredMenu = menuData.filter(item => {
+                const matchesCat = currentCategory === 'All' || item.category === currentCategory;
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery) || item.desc.toLowerCase().includes(searchQuery);
+                return matchesCat && matchesSearch;
+            });
+
+            if (filteredMenu.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            grid.innerHTML = filteredMenu.map(item => `
+                <div class="menu-card bg-luxury-700 border border-luxury-600 rounded-xl overflow-hidden flex flex-col hover:border-gold/50 transition-colors duration-300 cursor-pointer group" onclick="window.addToCart('${item.id}')">
+                    <div class="h-40 w-full overflow-hidden relative border-b border-luxury-600">
+                        <img src="${item.img}" alt="${item.name}" loading="lazy" class="menu-card-img w-full h-full object-cover opacity-90 group-hover:opacity-100">
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col">
+                        <h3 class="font-serif text-lg text-white font-semibold leading-tight mb-1">${item.name}</h3>
+                        <p class="text-xs text-gray-400 mb-3 line-clamp-2">${item.desc}</p>
+                        <div class="mt-auto flex justify-between items-center">
+                            <span class="text-gold font-bold text-sm">${formatPrice(item.price)}</span>
+                            <div class="w-8 h-8 rounded-full bg-luxury-600 flex items-center justify-center text-white group-hover:bg-gold group-hover:text-luxury-900 transition-colors">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            lucide.createIcons();
+        }
+
+        // --- Cart Logic ---
+        window.addToCart = function(itemId) {
+            const item = menuData.find(i => i.id === itemId);
+            const existing = cart.find(c => c.item.id === itemId);
+            
+            if (existing) existing.quantity += 1;
+            else cart.push({ item, quantity: 1 });
+            
+            updateCartUI();
+        };
+
+        window.updateQuantity = function(itemId, delta) {
+            const itemIndex = cart.findIndex(c => c.item.id === itemId);
+            if (itemIndex > -1) {
+                cart[itemIndex].quantity += delta;
+                if (cart[itemIndex].quantity <= 0) cart.splice(itemIndex, 1);
+            }
+            updateCartUI();
+        };
+
+        window.clearCart = function() {
+            cart = [];
+            updateCartUI();
+        };
+
+        function updateCartUI() {
+            const container = document.getElementById('cartItems');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            
+            if (cart.length === 0) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-gray-600 space-y-4">
+                        <i data-lucide="shopping-cart" class="w-12 h-12 opacity-30"></i>
+                        <p class="text-sm">Scan items to begin order.</p>
+                    </div>
+                `;
+                document.getElementById('cartSubtotal').innerText = '₱0.00';
+                document.getElementById('cartTax').innerText = '₱0.00';
+                document.getElementById('cartTotal').innerText = '₱0.00';
+                checkoutBtn.disabled = true;
+                clearBtn.disabled = true;
+                lucide.createIcons();
+                return;
+            }
+
+            checkoutBtn.disabled = false;
+            clearBtn.disabled = false;
+            
+            container.innerHTML = cart.map(c => `
+                <div class="flex gap-3 items-center bg-luxury-800 p-3 rounded-lg border border-luxury-600">
+                    <img src="${c.item.img}" class="w-12 h-12 object-cover rounded shadow border border-luxury-700">
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-white text-xs font-semibold truncate mb-1">${c.item.name}</h4>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gold text-xs">${formatPrice(c.item.price)}</span>
+                            <div class="flex items-center gap-2 bg-luxury-900 rounded px-1 py-0.5 border border-luxury-600">
+                                <button onclick="window.updateQuantity('${c.item.id}', -1)" class="text-gray-400 hover:text-white px-1">-</button>
+                                <span class="text-white text-xs w-4 text-center">${c.quantity}</span>
+                                <button onclick="window.updateQuantity('${c.item.id}', 1)" class="text-gray-400 hover:text-white px-1">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Totals Calculation (12% VAT instead of 10% Service Charge)
+            const subtotal = cart.reduce((acc, c) => acc + (c.item.price * c.quantity), 0);
+            const tax = subtotal * 0.12; // 12% VAT
+            const total = subtotal + tax;
+
+            document.getElementById('cartSubtotal').innerText = formatPrice(subtotal);
+            document.getElementById('cartTax').innerText = formatPrice(tax);
+            document.getElementById('cartTotal').innerText = formatPrice(total);
+            
+            lucide.createIcons();
+        }
+
+        // --- Checkout & Database Logic ---
+        window.openPaymentModal = function() {
+            if (cart.length === 0) return;
+            document.getElementById('paymentTotalAmount').innerText = document.getElementById('cartTotal').innerText;
+            document.getElementById('paymentModal').classList.remove('hidden');
+            document.getElementById('paymentModal').classList.add('flex');
+        };
+
+        window.closePaymentModal = function() {
+            document.getElementById('paymentModal').classList.add('hidden');
+            document.getElementById('paymentModal').classList.remove('flex');
+            document.getElementById('paymentForm').reset();
+        };
+
+        window.processOrder = async function(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('confirmPaymentBtn');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<span class="loader w-4 h-4 border-2 border-luxury-900 border-b-white"></span> Processing...';
+            btn.disabled = true;
+
+            const tableNo = document.getElementById('tableSelector').value;
+            const subtotal = cart.reduce((acc, c) => acc + (c.item.price * c.quantity), 0);
+            const total = subtotal + (subtotal * 0.12);
+
+            const orderData = {
+                table: tableNo,
+                items: cart.map(c => ({ id: c.item.id, name: c.item.name, qty: c.quantity, price: c.item.price })),
+                total: total,
+                status: 'Pending',
+                timestamp: serverTimestamp()
+            };
+
+            try {
+                // RULE 1: STRICT PATHS
+                if (db && currentUser) {
+                    const ordersRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
+                    await addDoc(ordersRef, orderData);
+                } else {
+                    console.warn("Mocking Firestore write (no db/user). Data:", orderData);
+                    await new Promise(r => setTimeout(r, 800)); // Fake network delay
+                }
+
+                showToast(`Order confirmed for Table ${tableNo}`);
+                window.closePaymentModal();
+                window.clearCart();
+            } catch (error) {
+                console.error("Order processing failed:", error);
+                alert("Failed to process order. Please check connection.");
+            } finally {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+        };
+
+        // --- Admin Dashboard Logic ---
+        window.openAdminLogin = function() {
+            document.getElementById('adminLoginModal').classList.remove('hidden');
+            document.getElementById('adminLoginModal').classList.add('flex');
+            document.getElementById('loginError').classList.add('hidden');
+            document.getElementById('adminLoginForm').reset();
+        };
+
+        window.closeAdminLogin = function() {
+            document.getElementById('adminLoginModal').classList.add('hidden');
+            document.getElementById('adminLoginModal').classList.remove('flex');
+        };
+
+        window.handleAdminLogin = function(e) {
+            e.preventDefault();
+            const email = document.getElementById('adminEmail').value;
+            const pwd = document.getElementById('adminPassword').value;
+
+            if (email === 'elainefernandez@eataly.ph' && pwd === 'eataly') {
+                window.closeAdminLogin();
+                openAdminDashboard();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        };
+
+        function openAdminDashboard() {
+            document.getElementById('adminDashboard').classList.remove('hidden');
+            document.getElementById('adminDashboard').classList.add('flex');
+            startOrdersListener();
+        }
+
+        window.logoutAdmin = function() {
+            document.getElementById('adminDashboard').classList.add('hidden');
+            document.getElementById('adminDashboard').classList.remove('flex');
+            if (unsubscribeOrders) {
+                unsubscribeOrders();
+                unsubscribeOrders = null;
+            }
+        };
+
+        function startOrdersListener() {
+            const listEl = document.getElementById('adminOrdersList');
+            
+            // Requires Auth guard
+            if (!db || !currentUser) {
+                listEl.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-400">Database not connected or User not authenticated.</td></tr>`;
+                return;
+            }
+
+            // RULE 2: No Complex Queries. Just fetch collection and sort in JS
+            const ordersRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
+            
+            listEl.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500"><div class="loader w-6 h-6 border-2 border-luxury-600 border-b-gold"></div></td></tr>`;
+
+            unsubscribeOrders = onSnapshot(ordersRef, 
+                (snapshot) => {
+                    const orders = [];
+                    snapshot.forEach(doc => {
+                        orders.push({ id: doc.id, ...doc.data() });
+                    });
+
+                    // Sort descending by time in memory
+                    orders.sort((a, b) => {
+                        const timeA = a.timestamp ? a.timestamp.toMillis() : 0;
+                        const timeB = b.timestamp ? b.timestamp.toMillis() : 0;
+                        return timeB - timeA;
+                    });
+
+                    if (orders.length === 0) {
+                        listEl.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500">No active orders found.</td></tr>`;
+                        return;
+                    }
+
+                    listEl.innerHTML = orders.map(order => {
+                        const itemsSummary = order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
+                        const timeString = order.timestamp 
+                            ? new Date(order.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+                            : 'Just now';
+                        
+                        // Fake order ID from doc ID
+                        const shortId = order.id.substring(0, 6).toUpperCase();
+
+                        return `
+                            <tr class="hover:bg-luxury-700/50 transition-colors">
+                                <td class="p-4 font-mono text-gold text-xs">#${shortId}</td>
+                                <td class="p-4 font-bold text-white">T-${order.table.toString().padStart(2, '0')}</td>
+                                <td class="p-4 text-gray-300 max-w-xs truncate" title="${itemsSummary}">${itemsSummary}</td>
+                                <td class="p-4 text-right font-medium text-white">${formatPrice(order.total || 0)}</td>
+                                <td class="p-4">
+                                    <span class="bg-blue-900/30 text-blue-400 border border-blue-900/50 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">
+                                        ${order.status}
+                                    </span>
+                                </td>
+                                <td class="p-4 text-right text-gray-500 text-sm">${timeString}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                },
+                (error) => {
+                    console.error("Firestore Listen Error:", error);
+                    listEl.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500">Failed to load orders.</td></tr>`;
+                }
+            );
+        }
+
+        // --- Utils ---
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            
+            toast.classList.remove('translate-x-[150%]');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-[150%]');
+            }, 3000);
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>
